@@ -1,0 +1,50 @@
+version: '3.7'
+
+networks:
+  bungee_semaphore_debug:
+    external: false
+
+volumes:
+  spigot_a:
+  spigot_b:
+  bungeecord:
+
+services:
+  spigota:
+    build:
+      context: .
+      dockerfile: ./docker/spigot/Dockerfile
+    image: spigot
+    networks:
+      - bungee_semaphore_debug
+    volumes:
+      - spigot_a:/spigot/
+    ports:
+      - "25566:25565"
+    stdin_open: true
+  spigotb:
+    build:
+      context: .
+      dockerfile: ./docker/spigot/Dockerfile
+    image: spigot
+    networks:
+      - bungee_semaphore_debug
+    volumes:
+      - spigot_b:/spigot/
+    ports:
+      - "25567:25565"
+    stdin_open: true
+  bungeecord:
+    build:
+      context: .
+      dockerfile: ./docker/bungeecord/Dockerfile
+    ports:
+      - 25565:25577
+    networks:
+      - bungee_semaphore_debug
+    volumes:
+      - bungeecord:/bungeecord/
+    depends_on:
+      - spigota
+      - spigotb
+    stdin_open: true
