@@ -1,0 +1,3 @@
+name: @name@
+main: click.seichi.seichiorchestra.SeichiOrchestra
+version: @version@
