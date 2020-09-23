@@ -4,7 +4,7 @@ ThisBuild / scalaVersion := "2.13.3"
 ThisBuild / version := "0.1"
 ThisBuild / description := "A BungeeCord plugin for controlling access to data shared among downstream servers"
 
-//region 依存設定
+//region dependency config
 
 resolvers ++= Seq(
   "bungeecord-repo" at "https://oss.sonatype.org/content/repositories/snapshots",
@@ -29,7 +29,7 @@ val dependenciesToEmbed = Seq(
 
 //endregion
 
-//region トークン置換の設定
+//region settings for token replacements
 
 val tokenReplacementMap = settingKey[Map[String, String]]("Map specifying what tokens should be replaced to")
 
@@ -53,7 +53,7 @@ resourceGenerators in Compile += (filteredResourceGenerator in Compile)
 
 unmanagedResources in Compile += baseDirectory.value / "LICENSE"
 
-// トークン置換を行ったファイルをunmanagedResourcesのコピーから除外する
+// exclude replaced files from copying of unmanagedResources
 excludeFilter in unmanagedResources :=
   filesToBeReplacedInResourceFolder.foldLeft((excludeFilter in unmanagedResources).value)(_.||(_))
 
