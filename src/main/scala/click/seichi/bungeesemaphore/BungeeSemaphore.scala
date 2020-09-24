@@ -6,7 +6,7 @@ import click.seichi.bungeesemaphore.application.{CanHandleDownstreamSignal, Effe
 import click.seichi.bungeesemaphore.domain.{PlayerName, ServerName}
 import click.seichi.bungeesemaphore.infrastructure.JulLoggerEffectEnvironment
 import click.seichi.bungeesemaphore.infrastructure.bugeecord.SemaphoringServerSwitcher
-import net.md_5.bungee.api.ChatColor
+import net.md_5.bungee.api.{ChatColor, ProxyServer}
 import net.md_5.bungee.api.chat.{BaseComponent, TextComponent}
 import net.md_5.bungee.api.plugin.Plugin
 
@@ -17,6 +17,8 @@ class BungeeSemaphore extends Plugin {
     implicit val _executionContext: ExecutionContext = ExecutionContext.global
     implicit val _contextShift: ContextShift[IO] = IO.contextShift(_executionContext)
     implicit val _effectEnvironment: EffectEnvironment = JulLoggerEffectEnvironment(getLogger)
+
+    implicit val _proxy: ProxyServer = getProxy
 
     // TODO 本物の設定ファイルで置き換える
     implicit val _configuration: Configuration = new Configuration {
@@ -43,7 +45,7 @@ class BungeeSemaphore extends Plugin {
     }
 
     val listeners = Vector(
-      new SemaphoringServerSwitcher[IO]()
+      new SemaphoringServerSwitcher[IO]
     )
 
     listeners.foreach { listener =>

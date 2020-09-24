@@ -4,16 +4,19 @@ import cats.effect.{Effect, Sync}
 import click.seichi.bungeesemaphore.application.configuration.Configuration
 import click.seichi.bungeesemaphore.application.{CanHandleDownstreamSignal, EffectEnvironment}
 import click.seichi.bungeesemaphore.domain.{PlayerName, ServerName}
+import net.md_5.bungee.UserConnection
+import net.md_5.bungee.api.ProxyServer
 import net.md_5.bungee.api.event.ServerConnectEvent
 import net.md_5.bungee.api.plugin.Listener
 import net.md_5.bungee.event.EventHandler
+import net.md_5.bungee.netty.HandlerBoss
 
 import scala.collection.mutable
 
 class SemaphoringServerSwitcher[
   F[_]: Effect: CanHandleDownstreamSignal
-](implicit configuration: Configuration,
-  effectEnvironment: EffectEnvironment) extends Listener {
+](implicit configuration: Configuration, effectEnvironment: EffectEnvironment, proxy: ProxyServer)
+  extends Listener {
 
   private val playersBeingConnectedToNewServer: mutable.Set[PlayerName] = mutable.HashSet()
 
@@ -36,6 +39,21 @@ class SemaphoringServerSwitcher[
     if (!playersBeingConnectedToNewServer.contains(playerName)) {
       import cats.implicits._
 
+      val overwriteBridge =
+        Sync[F].delay {
+          val userConnection = player.asInstanceOf[UserConnection]
+          val serverConnection = userConnection.getServer
+          val channel = serverConnection.getCh
+
+          channel.getHandle.pipeline().get(classOf[HandlerBoss]).setHandler {
+            new ConnectionRetainingDownstreamBridge(proxy, userConnection, serverConnection)
+          }
+        }
+
+      val disconnectPlayer = Sync[F].delay {
+        player.disconnect()
+      }
+
       val awaitSaveConfirmation =
         CanHandleDownstreamSignal[F]
           .awaitSaveConfirmationOf(playerName, sourceServerName)
@@ -52,16 +70,14 @@ class SemaphoringServerSwitcher[
         player.connect(targetServer)
       }
 
-      val program = for {
-        _ <- awaitSaveConfirmation
-        _ <- reconnectToTarget
-      } yield ()
-
       event.setCancelled(true)
 
       effectEnvironment.unsafeRunEffectAsync(
         "Execute semaphoric flow on server switching",
-        program
+        overwriteBridge >>
+          disconnectPlayer >>
+          awaitSaveConfirmation >>
+          reconnectToTarget
       )
     } else {
       // so that this listener ignores one `ServerConnectEvent` for marked players
