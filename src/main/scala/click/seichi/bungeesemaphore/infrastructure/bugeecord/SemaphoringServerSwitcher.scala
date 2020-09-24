@@ -10,7 +10,7 @@ import net.md_5.bungee.event.EventHandler
 
 import scala.collection.mutable
 
-class ServerSwitcher[
+class SemaphoringServerSwitcher[
   F[_]: Effect: CanHandleDownstreamSignal
 ](implicit configuration: Configuration,
   effectEnvironment: EffectEnvironment) extends Listener {
