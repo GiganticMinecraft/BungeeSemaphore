@@ -12,6 +12,7 @@ resolvers ++= Seq(
 
 val providedDependencies = Seq(
   "net.md-5" % "bungeecord-api" % "1.12-SNAPSHOT",
+  "net.md-5" % "bungeecord-parent" % "1.12-SNAPSHOT",
   // no runtime
   "org.typelevel" %% "simulacrum" % "1.0.0"
 ).map(_ % "provided")
@@ -26,6 +27,17 @@ val dependenciesToEmbed = Seq(
   "org.typelevel" %% "cats-core" % "2.1.0",
   "org.typelevel" %% "cats-effect" % "2.1.0",
 )
+
+// treat localDependencies as "provided" and do not shade them in the output Jar
+assemblyExcludedJars in assembly := {
+  (fullClasspath in assembly).value
+    .filter { a =>
+      def directoryContainsFile(directory: File, file: File) =
+        file.absolutePath.startsWith(directory.absolutePath)
+
+      directoryContainsFile(baseDirectory.value / "localDependencies", a.data)
+    }
+}
 
 //endregion
 
@@ -66,6 +78,7 @@ lazy val root = (project in file("."))
     name := "BungeeSemaphore",
     assemblyOutputPath in assembly := baseDirectory.value / "target" / "build" / s"BungeeSemaphore-${version.value}.jar",
     libraryDependencies := providedDependencies ++ testDependencies ++ dependenciesToEmbed,
+    unmanagedBase := baseDirectory.value / "localDependencies",
     scalacOptions ++= Seq(
       "-encoding", "utf8",
       "-unchecked",
