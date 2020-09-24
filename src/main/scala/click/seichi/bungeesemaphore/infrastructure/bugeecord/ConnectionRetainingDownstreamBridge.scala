@@ -12,8 +12,6 @@ class ConnectionRetainingDownstreamBridge(server: ProxyServer,
   extends DownstreamBridge(server, user, serverConnection) {
 
   override def disconnected(channel: ChannelWrapper): Unit = {
-    println("Downstream disconnected!")
-
     val serverDisconnectEvent = new ServerDisconnectEvent(user, serverConnection.getInfo)
 
     server.getPluginManager.callEvent(serverDisconnectEvent)
