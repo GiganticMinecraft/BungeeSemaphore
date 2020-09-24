@@ -31,7 +31,7 @@ class SemaphoringServerSwitcher[
     val sourceServerName = ServerName(connectedServer.getName)
 
     if (connectedServer.getAddress == targetServer.getAddress) return
-    if (configuration.shouldAwaitForSaveSignal(sourceServerName)) return
+    if (!configuration.shouldAwaitForSaveSignal(sourceServerName)) return
 
     if (!playersBeingConnectedToNewServer.contains(playerName)) {
       import cats.implicits._
