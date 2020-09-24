@@ -39,7 +39,7 @@ class SemaphoringServerSwitcher[
     if (!playersBeingConnectedToNewServer.contains(playerName)) {
       import cats.implicits._
 
-      val overwriteBridge =
+      val overwriteDownstreamBridge =
         Sync[F].delay {
           val userConnection = player.asInstanceOf[UserConnection]
           val serverConnection = userConnection.getServer
@@ -73,7 +73,7 @@ class SemaphoringServerSwitcher[
 
       effectEnvironment.unsafeRunEffectAsync(
         "Execute semaphoric flow on server switching",
-        overwriteBridge >>
+        overwriteDownstreamBridge >>
           disconnectPlayer >>
           awaitSaveConfirmation >>
           reconnectToTarget
