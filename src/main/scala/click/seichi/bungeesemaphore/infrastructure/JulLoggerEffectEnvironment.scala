@@ -9,6 +9,7 @@ case class JulLoggerEffectEnvironment(julLogger: Logger) extends EffectEnvironme
   override def unsafeRunEffectAsync[U, F[_] : Effect](context: String, program: F[U]): Unit = {
     Effect[F].toIO(program).unsafeRunAsync {
       case Left(error) =>
+        julLogger.severe(s"Error encountered in the context: $context")
         julLogger.severe(error.toString)
         julLogger.severe(error.getStackTrace.map(_.toString).mkString("\n"))
       case Right(_) => ()
