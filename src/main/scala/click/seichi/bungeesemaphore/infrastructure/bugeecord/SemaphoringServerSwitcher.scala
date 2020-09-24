@@ -43,15 +43,14 @@ class SemaphoringServerSwitcher[
         Sync[F].delay {
           val userConnection = player.asInstanceOf[UserConnection]
           val serverConnection = userConnection.getServer
-          val channel = serverConnection.getCh
 
-          channel.getHandle.pipeline().get(classOf[HandlerBoss]).setHandler {
+          serverConnection.getCh.getHandle.pipeline().get(classOf[HandlerBoss]).setHandler {
             new ConnectionRetainingDownstreamBridge(proxy, userConnection, serverConnection)
           }
         }
 
       val disconnectPlayer = Sync[F].delay {
-        player.disconnect()
+        player.getServer.disconnect()
       }
 
       val awaitSaveConfirmation =
