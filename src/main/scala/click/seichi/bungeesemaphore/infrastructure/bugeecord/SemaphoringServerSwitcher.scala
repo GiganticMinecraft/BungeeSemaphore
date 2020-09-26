@@ -55,7 +55,7 @@ class SemaphoringServerSwitcher[
 
       val awaitSaveConfirmation =
         CanHandleDownstreamSignal[F]
-          .awaitSaveConfirmationOf(playerName, sourceServerName)
+          .awaitSaveConfirmationOf(playerName)
           .onError { _ =>
             Sync[F].delay {
               player.disconnect(configuration.errorMessages.downstreamCouldNotSaveData)
