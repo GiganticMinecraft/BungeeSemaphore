@@ -2,13 +2,13 @@ package click.seichi.bungeesemaphore
 
 import cats.effect.{ContextShift, IO}
 import click.seichi.bungeesemaphore.application.configuration.{Configuration, ErrorMessages, ServerNamePredicate}
-import click.seichi.bungeesemaphore.application.{CanHandleDownstreamSignal, EffectEnvironment}
-import click.seichi.bungeesemaphore.domain.{PlayerName, ServerName}
+import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasGlobalPlayerSemaphore}
+import click.seichi.bungeesemaphore.domain.PlayerName
 import click.seichi.bungeesemaphore.infrastructure.JulLoggerEffectEnvironment
 import click.seichi.bungeesemaphore.infrastructure.bugeecord.SemaphoringServerSwitcher
-import net.md_5.bungee.api.{ChatColor, ProxyServer}
 import net.md_5.bungee.api.chat.{BaseComponent, TextComponent}
 import net.md_5.bungee.api.plugin.Plugin
+import net.md_5.bungee.api.{ChatColor, ProxyServer}
 
 import scala.concurrent.ExecutionContext
 
@@ -22,7 +22,9 @@ class BungeeSemaphore extends Plugin {
 
     // TODO 本物の設定ファイルで置き換える
     implicit val _configuration: Configuration = new Configuration {
+      override val emitsSaveSignalOnDisconnect: ServerNamePredicate = _ => true
       override val shouldAwaitForSaveSignal: ServerNamePredicate = _ => true
+
       override val errorMessages: ErrorMessages = new ErrorMessages {
         override val downstreamCouldNotSaveData: BaseComponent = {
           import scala.util.chaining._
@@ -36,8 +38,10 @@ class BungeeSemaphore extends Plugin {
     }
 
     // TODO 本物のシグナルハンドラで置き換える
-    implicit val _signalHandler: CanHandleDownstreamSignal[IO] = {
-      (_: PlayerName, _: ServerName) => {
+    implicit val _signalHandler: HasGlobalPlayerSemaphore[IO] = new HasGlobalPlayerSemaphore[IO] {
+      override def lock(playerName: PlayerName): IO[Unit] = IO.unit
+
+      override def awaitLockAvailability(playerName: PlayerName): IO[Unit] = {
         import scala.concurrent.duration._
 
         IO.timer(_executionContext).sleep(5.seconds)

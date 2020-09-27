@@ -10,6 +10,8 @@ trait ErrorMessages {
 
 trait Configuration {
 
+  val emitsSaveSignalOnDisconnect: ServerNamePredicate
+
   val shouldAwaitForSaveSignal: ServerNamePredicate
 
   val errorMessages: ErrorMessages
