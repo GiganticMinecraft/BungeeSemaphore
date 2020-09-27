@@ -24,6 +24,7 @@ val testDependencies = Seq(
 ).map(_ % "test")
 
 val dependenciesToEmbed = Seq(
+  "org.scala-lang.modules" %% "scala-parallel-collections" % "0.2.0",
   "org.typelevel" %% "cats-core" % "2.1.0",
   "org.typelevel" %% "cats-effect" % "2.1.0",
 )

@@ -13,14 +13,14 @@ import net.md_5.bungee.api.plugin.Listener
 import net.md_5.bungee.event.EventHandler
 import net.md_5.bungee.netty.HandlerBoss
 
-import scala.collection.mutable
+import scala.collection.parallel.mutable.ParHashSet
 
 class SemaphoringServerSwitcher[
   F[_]: Effect: HasGlobalPlayerSemaphore
 ](implicit configuration: Configuration, effectEnvironment: EffectEnvironment, proxy: ProxyServer)
   extends Listener {
 
-  private val playersBeingConnectedToNewServer: mutable.Set[PlayerName] = mutable.HashSet()
+  private val playersBeingConnectedToNewServer: ParHashSet[PlayerName] = ParHashSet()
 
   import cats.implicits._
 
@@ -85,7 +85,7 @@ class SemaphoringServerSwitcher[
 
       val reconnectToTarget = Sync[F].delay {
         // prevent this listener from reacting again
-        playersBeingConnectedToNewServer.add(playerName)
+        playersBeingConnectedToNewServer.addOne(playerName)
 
         player.connect(targetServer)
       }
@@ -98,7 +98,7 @@ class SemaphoringServerSwitcher[
       )
     } else {
       // so that this listener ignores one `ServerConnectEvent` for marked players
-      playersBeingConnectedToNewServer.remove(playerName)
+      playersBeingConnectedToNewServer.removeElem(playerName)
     }
   }
 
