@@ -10,7 +10,7 @@ import net.md_5.bungee.api.config.ServerInfo
 import net.md_5.bungee.api.connection.ProxiedPlayer
 import net.md_5.bungee.api.event.{PlayerDisconnectEvent, ServerConnectEvent}
 import net.md_5.bungee.api.plugin.Listener
-import net.md_5.bungee.event.EventHandler
+import net.md_5.bungee.event.{EventHandler, EventPriority}
 import net.md_5.bungee.netty.HandlerBoss
 
 import scala.collection.parallel.mutable.ParHashSet
@@ -39,7 +39,7 @@ class SemaphoringServerSwitcher[
     preMark >> disconnectPlayer
   }
 
-  @EventHandler
+  @EventHandler(priority = EventPriority.LOWEST)
   def onPlayerDisconnect(event: PlayerDisconnectEvent): Unit = {
     effectEnvironment.unsafeRunEffectAsync(
       "Lock on disconnection",
@@ -47,13 +47,13 @@ class SemaphoringServerSwitcher[
     )
   }
 
-  @EventHandler
+  @EventHandler(priority = EventPriority.LOWEST)
   def onServerConnect(event: ServerConnectEvent): Unit = {
     val player = event.getPlayer
     val targetServer = event.getTarget
     val playerName = PlayerName(player.getName)
 
-    val disconnectSource = player.getServer match {
+    val disconnectSourceIfExists = player.getServer match {
       case null => Sync[F].unit
       case server =>
         val overwriteDownstreamBridge =
@@ -70,7 +70,7 @@ class SemaphoringServerSwitcher[
     }
 
     if (!playersBeingConnectedToNewServer.contains(playerName)) {
-      val awaitSaveConfirmation =
+      val awaitSaveConfirmationIfRequired =
         if (configuration.shouldAwaitForSaveSignal(ServerName(targetServer.getName))) {
           HasGlobalPlayerSemaphore[F]
             .awaitLockAvailability(playerName)
@@ -94,7 +94,9 @@ class SemaphoringServerSwitcher[
 
       effectEnvironment.unsafeRunEffectAsync(
         "Execute semaphoric flow on server switching",
-        disconnectSource >> awaitSaveConfirmation >> reconnectToTarget
+        disconnectSourceIfExists >>
+          awaitSaveConfirmationIfRequired >>
+          reconnectToTarget
       )
     } else {
       // so that this listener ignores one `ServerConnectEvent` for marked players
