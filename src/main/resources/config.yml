@@ -1,0 +1,4 @@
+synchronized-server-regex: ".*"
+locale:
+  error:
+    failed-saving-data: "Downstream server failed saving data!"
