@@ -1,18 +1,17 @@
 package click.seichi.bungeesemaphore
 
-import cats.effect.{ContextShift, IO}
-import click.seichi.bungeesemaphore.application.configuration.{Configuration, ErrorMessages, ServerNamePredicate}
+import cats.effect.{ContextShift, IO, SyncIO}
+import click.seichi.bungeesemaphore.application.configuration.Configuration
 import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasGlobalPlayerSemaphore}
 import click.seichi.bungeesemaphore.domain.PlayerName
 import click.seichi.bungeesemaphore.infrastructure.JulLoggerEffectEnvironment
 import click.seichi.bungeesemaphore.infrastructure.bugeecord.SemaphoringServerSwitcher
-import net.md_5.bungee.api.chat.{BaseComponent, TextComponent}
+import net.md_5.bungee.api.ProxyServer
 import net.md_5.bungee.api.plugin.Plugin
-import net.md_5.bungee.api.{ChatColor, ProxyServer}
 
 import scala.concurrent.ExecutionContext
 
-class BungeeSemaphore extends Plugin {
+class BungeeSemaphorePlugin extends Plugin {
   override def onEnable(): Unit = {
     implicit val _executionContext: ExecutionContext = ExecutionContext.global
     implicit val _contextShift: ContextShift[IO] = IO.contextShift(_executionContext)
@@ -20,21 +19,8 @@ class BungeeSemaphore extends Plugin {
 
     implicit val _proxy: ProxyServer = getProxy
 
-    // TODO 本物の設定ファイルで置き換える
-    implicit val _configuration: Configuration = new Configuration {
-      override val emitsSaveSignalOnDisconnect: ServerNamePredicate = _ => true
-      override val shouldAwaitForSaveSignal: ServerNamePredicate = _ => true
-
-      override val errorMessages: ErrorMessages = new ErrorMessages {
-        override val downstreamCouldNotSaveData: BaseComponent = {
-          import scala.util.chaining._
-
-          new TextComponent().tap { component =>
-            component.setText("Downstream server failed saving data.")
-            component.setColor(ChatColor.RED)
-          }
-        }
-      }
+    implicit val _configuration: Configuration = {
+      new PluginConfiguration[SyncIO](getDataFolder).getConfiguration.unsafeRunSync()
     }
 
     // TODO 本物のシグナルハンドラで置き換える

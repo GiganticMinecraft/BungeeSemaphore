@@ -1,3 +1,3 @@
 name: @name@
-main: click.seichi.bungeesemaphore.BungeeSemaphore
+main: click.seichi.bungeesemaphore.BungeeSemaphorePlugin
 version: @version@
