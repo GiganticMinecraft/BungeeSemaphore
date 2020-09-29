@@ -10,8 +10,8 @@ rm /bungeecord/plugins/BungeeSemaphore*.jar || true
 cp -Rf /bungeecord-files/* /bungeecord/
 
 # extract fresh config and replace
-# cd /bungeecord/plugins/BungeeSemaphore
-# rm config.yml
-# jar xf ../BungeeSemaphore-*.jar config.yml
+cd /bungeecord/plugins/BungeeSemaphore
+rm config.yml
+jar xf ../BungeeSemaphore*.jar config.yml
 
 cd /bungeecord/ && java -jar /bungeecord/BungeeCord*.jar
