@@ -4,7 +4,7 @@ import java.io.File
 import java.nio.file.{Files, Path}
 
 import cats.effect.Sync
-import click.seichi.bungeesemaphore.application.configuration.{Configuration, ErrorMessages, ServerNamePredicate}
+import click.seichi.bungeesemaphore.application.configuration.{Configuration, ErrorMessages, RedisConnectionSettings, ServerNamePredicate}
 import click.seichi.bungeesemaphore.domain.ServerName
 import net.md_5.bungee.api.chat.{BaseComponent, TextComponent}
 import net.md_5.bungee.config.{ConfigurationProvider, YamlConfiguration}
@@ -62,10 +62,27 @@ class PluginConfiguration[F[_]: Sync](dataFolder: File) {
         }
       }
 
+      val redisConnectionSettings = {
+        val redisSettingsSection = config.getSection("redis")
+
+        new RedisConnectionSettings {
+          override val host: String = redisSettingsSection.getString("host")
+          override val port: Int = redisSettingsSection.getInt("port")
+          override val password: Option[String] = {
+            if (redisSettingsSection.contains("password")) {
+              Some(redisSettingsSection.getString("password"))
+            } else {
+              None
+            }
+          }
+        }
+      }
+
       new Configuration {
         override val emitsSaveSignalOnDisconnect: ServerNamePredicate = serverIsSynchronized
         override val shouldAwaitForSaveSignal: ServerNamePredicate = serverIsSynchronized
         override val errorMessages: ErrorMessages = errorMessagesFromConfig
+        override val redis: RedisConnectionSettings = redisConnectionSettings
       }
     }
   }

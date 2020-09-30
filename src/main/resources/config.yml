@@ -1,4 +1,11 @@
 synchronized-server-regex: ".*"
+
 locale:
   error:
     failed-saving-data: "Downstream server failed saving data!"
+
+redis:
+  host: localhost
+  port: 6379
+  # uncomment and edit the line below if the redis server has a password
+  # password: ""

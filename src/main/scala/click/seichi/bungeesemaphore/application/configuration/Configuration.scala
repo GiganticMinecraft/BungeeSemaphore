@@ -8,6 +8,16 @@ trait ErrorMessages {
 
 }
 
+trait RedisConnectionSettings {
+
+  val host: String
+
+  val port: Int
+
+  val password: Option[String]
+
+}
+
 trait Configuration {
 
   val emitsSaveSignalOnDisconnect: ServerNamePredicate
@@ -15,5 +25,7 @@ trait Configuration {
   val shouldAwaitForSaveSignal: ServerNamePredicate
 
   val errorMessages: ErrorMessages
+
+  val redis: RedisConnectionSettings
 
 }
