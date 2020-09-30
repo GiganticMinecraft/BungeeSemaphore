@@ -1,5 +1,7 @@
 package click.seichi.bungeesemaphore.infrastructure.bugeecord
 
+import java.util.concurrent.ConcurrentHashMap
+
 import cats.effect.{Effect, Sync}
 import click.seichi.bungeesemaphore.application.configuration.Configuration
 import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasGlobalPlayerSemaphore}
@@ -13,14 +15,20 @@ import net.md_5.bungee.api.plugin.Listener
 import net.md_5.bungee.event.{EventHandler, EventPriority}
 import net.md_5.bungee.netty.HandlerBoss
 
-import scala.collection.parallel.mutable.ParHashSet
+import scala.collection.mutable
 
 class SemaphoringServerSwitcher[
   F[_]: Effect: HasGlobalPlayerSemaphore
 ](implicit configuration: Configuration, effectEnvironment: EffectEnvironment, proxy: ProxyServer)
   extends Listener {
 
-  private val playersBeingConnectedToNewServer: ParHashSet[PlayerName] = ParHashSet()
+  private val playersBeingConnectedToNewServer: mutable.Set[PlayerName] = {
+    import scala.jdk.CollectionConverters._
+
+    java.util.Collections
+      .newSetFromMap(new ConcurrentHashMap[PlayerName, java.lang.Boolean]())
+      .asScala
+  }
 
   import cats.implicits._
 
@@ -85,7 +93,7 @@ class SemaphoringServerSwitcher[
 
       val reconnectToTarget = Sync[F].delay {
         // prevent this listener from reacting again
-        playersBeingConnectedToNewServer.addOne(playerName)
+        playersBeingConnectedToNewServer.add(playerName)
 
         player.connect(targetServer)
       }
@@ -100,7 +108,7 @@ class SemaphoringServerSwitcher[
       )
     } else {
       // so that this listener ignores one `ServerConnectEvent` for marked players
-      playersBeingConnectedToNewServer.removeElem(playerName)
+      playersBeingConnectedToNewServer.remove(playerName)
     }
   }
 
