@@ -1,20 +1,22 @@
 package click.seichi.bungeesemaphore.infrastructure.redis
 
-import java.net.InetSocketAddress
-
 import cats.effect.Effect
+import click.seichi.bungeesemaphore.application.configuration.Configuration
 import click.seichi.bungeesemaphore.application.{EffectEnvironment, PlayerNameLocalLock}
 import redis.actors.RedisSubscriberActor
 import redis.api.pubsub.{Message, PMessage}
 
 class ManipulateLockActor[
   F[_]: Effect
-](address: InetSocketAddress, channel: String)
- (implicit localLock: PlayerNameLocalLock[F], effectEnvironment: EffectEnvironment)
+](channel: String)
+ (implicit localLock: PlayerNameLocalLock[F],
+  effectEnvironment: EffectEnvironment,
+  configuration: Configuration)
   extends RedisSubscriberActor(
-    address = address,
+    address = configuration.redis.address,
     channels = Seq(channel),
     patterns = Nil,
+    authPassword = configuration.redis.password,
     onConnectStatus = _ => ()
   ) {
 

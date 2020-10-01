@@ -22,9 +22,8 @@ object LocalLockRedisBridge {
 
       // bind the subscriber
       actorSystem.actorOf(
-        Props {
-          new ManipulateLockActor[F](configuration.redis.address, SignalFormat.signalingChannel)
-        }.withDispatcher("rediscala.rediscala-client-worker-dispatcher")
+        Props(new ManipulateLockActor[F](SignalFormat.signalingChannel))
+          .withDispatcher("rediscala.rediscala-client-worker-dispatcher")
       )
 
       // expose HasGlobalPlayerSemaphore operations to external world
