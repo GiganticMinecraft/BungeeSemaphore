@@ -26,6 +26,7 @@ val testDependencies = Seq(
 val dependenciesToEmbed = Seq(
   "org.typelevel" %% "cats-core" % "2.1.0",
   "org.typelevel" %% "cats-effect" % "2.1.0",
+  "com.github.etaty" %% "rediscala" % "1.9.0",
 )
 
 // treat localDependencies as "provided" and do not shade them in the output Jar

@@ -1,5 +1,7 @@
 package click.seichi.bungeesemaphore.application.configuration
 
+import java.net.InetSocketAddress
+
 import net.md_5.bungee.api.chat.BaseComponent
 
 trait ErrorMessages {
@@ -15,6 +17,8 @@ trait RedisConnectionSettings {
   val port: Int
 
   val password: Option[String]
+
+  lazy val address = new InetSocketAddress(host, port)
 
 }
 
