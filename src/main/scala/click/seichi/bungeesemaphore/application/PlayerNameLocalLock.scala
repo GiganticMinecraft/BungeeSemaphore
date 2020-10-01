@@ -12,7 +12,7 @@ import scala.collection.concurrent.TrieMap
  *
  * @tparam F the context in which locking and unlocking is performed
  */
-class PlayerNameLocalLock[F[_]](private val lockMap: concurrent.Map[PlayerName, Deferred[F, Unit]])
+class PlayerNameLocalLock[F[_]](private val lockMap: concurrent.Map[PlayerName, Deferred[F, Boolean]])
                                (implicit private val F: Concurrent[F]) {
 
   import cats.implicits._
@@ -25,9 +25,21 @@ class PlayerNameLocalLock[F[_]](private val lockMap: concurrent.Map[PlayerName, 
    */
   def lock(playerName: PlayerName): F[Unit] = {
     for {
-      promise <- Deferred[F, Unit]
+      promise <- Deferred[F, Boolean]
       _ <- F.delay {
         lockMap.putIfAbsent(playerName, promise)
+      }
+    } yield ()
+  }
+
+  private def unlockWithSuccessFlag(playerName: PlayerName, success: Boolean): F[Unit] = {
+    for {
+      promise <- F.delay {
+        lockMap.remove(playerName)
+      }
+      _ <- promise match {
+        case Some(promise) => promise.complete(success)
+        case None => F.unit
       }
     } yield ()
   }
@@ -36,15 +48,20 @@ class PlayerNameLocalLock[F[_]](private val lockMap: concurrent.Map[PlayerName, 
    * The computation to release a lock, if exists, on the given [[PlayerName]].
    */
   def unlock(playerName: PlayerName): F[Unit] = {
-    for {
-      promise <- F.delay {
-        lockMap.remove(playerName)
-      }
-      _ <- promise match {
-        case Some(promise) => promise.complete(())
-        case None => F.unit
-      }
-    } yield ()
+    unlockWithSuccessFlag(
+      playerName, success = true
+    )
+  }
+
+  /**
+   * The computation to release a lock, if exists, on the given [[PlayerName]].
+   *
+   * Unlike [[unlock]], this action will make awaiting [[awaitLockAvailability]] actions fail with an error.
+   */
+  def unlockWithFailure(playerName: PlayerName): F[Unit] = {
+    unlockWithSuccessFlag(
+      playerName, success = false
+    )
   }
 
   /**
@@ -55,9 +72,14 @@ class PlayerNameLocalLock[F[_]](private val lockMap: concurrent.Map[PlayerName, 
       promise <- F.delay {
         lockMap.get(playerName)
       }
-      _ <- promise match {
+      success <- promise match {
         case Some(promise) => promise.get
-        case None => F.unit
+        case None => F.pure(true)
+      }
+      _ <- if (success) {
+        F.unit
+      } else {
+        F.raiseError(PlayerNameLocalLock.LockReleasedExceptionally)
       }
     } yield ()
   }
@@ -65,6 +87,8 @@ class PlayerNameLocalLock[F[_]](private val lockMap: concurrent.Map[PlayerName, 
 }
 
 object PlayerNameLocalLock {
+  case object LockReleasedExceptionally extends Throwable
+
   /**
    * Unsafely allocate state and get an instance of [[PlayerNameLocalLock]].
    */
