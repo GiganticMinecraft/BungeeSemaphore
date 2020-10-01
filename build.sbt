@@ -40,6 +40,13 @@ assemblyExcludedJars in assembly := {
     }
 }
 
+assemblyMergeStrategy in assembly := {
+  case PathList(x) if x.endsWith(".conf") => MergeStrategy.concat
+  case x =>
+    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    oldStrategy(x)
+}
+
 //endregion
 
 //region settings for token replacements
@@ -79,6 +86,7 @@ lazy val root = (project in file("."))
     name := "BungeeSemaphore",
     assemblyOutputPath in assembly := baseDirectory.value / "target" / "build" / s"BungeeSemaphore-${version.value}.jar",
     libraryDependencies := providedDependencies ++ testDependencies ++ dependenciesToEmbed,
+    unmanagedBase := baseDirectory.value / "localDependencies",
     unmanagedBase := baseDirectory.value / "localDependencies",
     scalacOptions ++= Seq(
       "-encoding", "utf8",

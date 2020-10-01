@@ -5,6 +5,7 @@ import cats.effect.{ContextShift, IO, SyncIO}
 import click.seichi.bungeesemaphore.application.configuration.Configuration
 import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasGlobalPlayerSemaphore, PlayerNameLocalLock}
 import click.seichi.bungeesemaphore.infrastructure.JulLoggerEffectEnvironment
+import click.seichi.bungeesemaphore.infrastructure.akka.ConfiguredActorSystemProvider
 import click.seichi.bungeesemaphore.infrastructure.bugeecord.SemaphoringServerSwitcher
 import click.seichi.bungeesemaphore.infrastructure.redis.LocalLockRedisBridge
 import net.md_5.bungee.api.ProxyServer
@@ -26,7 +27,7 @@ class BungeeSemaphorePlugin extends Plugin {
     }
 
     implicit val _akkaSystem: ActorSystem = {
-      this.akkaSystem = akka.actor.ActorSystem()
+      this.akkaSystem = ConfiguredActorSystemProvider("reference.conf").provide()
       this.akkaSystem
     }
     implicit val _localLock: PlayerNameLocalLock[IO] = PlayerNameLocalLock.unsafe
