@@ -30,8 +30,6 @@ services:
     stdin_open: true
     depends_on:
       - redis
-    environment:
-      - REDIS_HOST=redis
   spigotb:
     build:
       context: .
@@ -46,8 +44,6 @@ services:
     stdin_open: true
     depends_on:
       - redis
-    environment:
-      - REDIS_HOST=redis
   bungeecord:
     build:
       context: .
@@ -62,3 +58,5 @@ services:
       - spigota
       - spigotb
     stdin_open: true
+    environment:
+      - REDIS_HOST=redis
