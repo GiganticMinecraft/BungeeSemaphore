@@ -10,6 +10,12 @@ volumes:
   bungeecord:
 
 services:
+  redis:
+    image: "redis:latest"
+    networks:
+      - bungee_semaphore_debug
+    ports:
+      - "6379:6379"
   spigota:
     build:
       context: .
@@ -22,6 +28,10 @@ services:
     ports:
       - "25566:25565"
     stdin_open: true
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
   spigotb:
     build:
       context: .
@@ -34,6 +44,10 @@ services:
     ports:
       - "25567:25565"
     stdin_open: true
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
   bungeecord:
     build:
       context: .
