@@ -4,7 +4,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 import cats.effect.{Effect, Sync}
 import click.seichi.bungeesemaphore.application.configuration.Configuration
-import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasGlobalPlayerSemaphore}
+import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasGlobalPlayerDataSaveLock}
 import click.seichi.bungeesemaphore.domain.{PlayerName, ServerName}
 import net.md_5.bungee.UserConnection
 import net.md_5.bungee.api.ProxyServer
@@ -18,7 +18,7 @@ import net.md_5.bungee.netty.HandlerBoss
 import scala.collection.mutable
 
 class SemaphoringServerSwitcher[
-  F[_]: Effect: HasGlobalPlayerSemaphore
+  F[_]: Effect: HasGlobalPlayerDataSaveLock
 ](implicit configuration: Configuration, effectEnvironment: EffectEnvironment, proxy: ProxyServer)
   extends Listener {
 
@@ -35,7 +35,7 @@ class SemaphoringServerSwitcher[
   private def lockOnDisconnection(player: ProxiedPlayer, server: ServerInfo): F[Unit] = {
     val preMark =
       if (configuration.emitsSaveSignalOnDisconnect(ServerName(server.getName))) {
-        HasGlobalPlayerSemaphore[F].lock(PlayerName(player.getName))
+        HasGlobalPlayerDataSaveLock[F].lock(PlayerName(player.getName))
       } else {
         Sync[F].unit
       }
@@ -80,7 +80,7 @@ class SemaphoringServerSwitcher[
     if (!playersBeingConnectedToNewServer.contains(playerName)) {
       val awaitSaveConfirmationIfRequired =
         if (configuration.shouldAwaitForSaveSignal(ServerName(targetServer.getName))) {
-          HasGlobalPlayerSemaphore[F]
+          HasGlobalPlayerDataSaveLock[F]
             .awaitLockAvailability(playerName)
             .onError { _ =>
               Sync[F].delay {

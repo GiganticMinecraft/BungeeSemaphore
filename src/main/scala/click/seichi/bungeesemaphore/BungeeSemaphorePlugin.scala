@@ -3,10 +3,10 @@ package click.seichi.bungeesemaphore
 import akka.actor.ActorSystem
 import cats.effect.{ContextShift, IO, SyncIO}
 import click.seichi.bungeesemaphore.application.configuration.Configuration
-import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasGlobalPlayerSemaphore, PlayerNameLocalLock}
+import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasGlobalPlayerDataSaveLock, HasPlayerConnectionLock, PlayerNameLocalLock}
 import click.seichi.bungeesemaphore.infrastructure.JulLoggerEffectEnvironment
 import click.seichi.bungeesemaphore.infrastructure.akka.ConfiguredActorSystemProvider
-import click.seichi.bungeesemaphore.infrastructure.bugeecord.SemaphoringServerSwitcher
+import click.seichi.bungeesemaphore.infrastructure.bugeecord.{PlayerConnectionLockSynchronizer, SemaphoringServerSwitcher}
 import click.seichi.bungeesemaphore.infrastructure.redis.LocalLockRedisBridge
 import net.md_5.bungee.api.ProxyServer
 import net.md_5.bungee.api.plugin.Plugin
@@ -31,16 +31,28 @@ class BungeeSemaphorePlugin extends Plugin {
       this.akkaSystem
     }
 
-    // A lock whose state corresponds to downstream servers saving player data
-    val downstreamSaveLock: PlayerNameLocalLock[IO] = PlayerNameLocalLock.unsafe
+    implicit val _ioHasGlobalPlayerSemaphore: HasGlobalPlayerDataSaveLock[IO] = {
+      // A lock whose state corresponds to downstream servers saving player data
+      val downstreamSaveLock: PlayerNameLocalLock[IO] = PlayerNameLocalLock.unsafe
 
-    implicit val _ioHasGlobalPlayerSemaphore: HasGlobalPlayerSemaphore[IO] = {
       LocalLockRedisBridge.bindLocalLockToRedis[IO](downstreamSaveLock).unsafeRunSync()
+    }
+
+    val connectionLockSynchronizer = {
+      // A lock whose state corresponds to player connection states
+      val connectionLock: PlayerNameLocalLock[IO] = PlayerNameLocalLock.unsafe
+
+      new PlayerConnectionLockSynchronizer[IO](connectionLock)
+    }
+
+    implicit val _ioHasPlayerConnectionLock: HasPlayerConnectionLock[IO] = {
+      connectionLockSynchronizer.provideConnectionLock
     }
 
     implicit val _proxy: ProxyServer = getProxy
 
     val listeners = Vector(
+      connectionLockSynchronizer,
       new SemaphoringServerSwitcher[IO]
     )
 

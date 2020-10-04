@@ -3,7 +3,7 @@ package click.seichi.bungeesemaphore.infrastructure.redis
 import akka.actor.{ActorSystem, Props}
 import cats.effect.{ContextShift, Effect, IO, Sync}
 import click.seichi.bungeesemaphore.application.configuration.Configuration
-import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasGlobalPlayerSemaphore, PlayerNameLocalLock}
+import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasGlobalPlayerDataSaveLock, PlayerNameLocalLock}
 import click.seichi.bungeesemaphore.domain.PlayerName
 
 object LocalLockRedisBridge {
@@ -15,7 +15,7 @@ object LocalLockRedisBridge {
    (implicit configuration: Configuration,
     actorSystem: ActorSystem,
     effectEnvironment: EffectEnvironment,
-    publishingContext: ContextShift[IO]): F[HasGlobalPlayerSemaphore[F]] = {
+    publishingContext: ContextShift[IO]): F[HasGlobalPlayerDataSaveLock[F]] = {
 
     Sync[F].delay {
       val client = ConfiguredRedisClient()
@@ -27,7 +27,7 @@ object LocalLockRedisBridge {
       )
 
       // expose HasGlobalPlayerSemaphore operations to external world
-      new HasGlobalPlayerSemaphore[F] {
+      new HasGlobalPlayerDataSaveLock[F] {
         override def lock(playerName: PlayerName): F[Unit] = {
           localLock.lock(playerName) >> Effect[F].liftIO {
             IO.fromFuture {
