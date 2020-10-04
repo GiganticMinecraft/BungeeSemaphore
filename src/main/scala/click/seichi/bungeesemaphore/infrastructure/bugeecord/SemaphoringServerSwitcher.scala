@@ -2,9 +2,9 @@ package click.seichi.bungeesemaphore.infrastructure.bugeecord
 
 import java.util.concurrent.ConcurrentHashMap
 
-import cats.effect.{Effect, Sync}
+import cats.effect.{ConcurrentEffect, Sync}
 import click.seichi.bungeesemaphore.application.configuration.Configuration
-import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasGlobalPlayerDataSaveLock}
+import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasGlobalPlayerDataSaveLock, HasPlayerConnectionLock}
 import click.seichi.bungeesemaphore.domain.{PlayerName, ServerName}
 import net.md_5.bungee.UserConnection
 import net.md_5.bungee.api.ProxyServer
@@ -18,7 +18,7 @@ import net.md_5.bungee.netty.HandlerBoss
 import scala.collection.mutable
 
 class SemaphoringServerSwitcher[
-  F[_]: Effect: HasGlobalPlayerDataSaveLock
+  F[_]: ConcurrentEffect: HasGlobalPlayerDataSaveLock: HasPlayerConnectionLock
 ](implicit configuration: Configuration, effectEnvironment: EffectEnvironment, proxy: ProxyServer)
   extends Listener {
 
@@ -98,13 +98,17 @@ class SemaphoringServerSwitcher[
         player.connect(targetServer)
       }
 
+      val awaitPlayerDisconnection = HasPlayerConnectionLock[F].awaitDisconnectedState(playerName)
+
       event.setCancelled(true)
 
       effectEnvironment.unsafeRunEffectAsync(
         "Execute semaphoric flow on server switching",
         disconnectSourceIfExists >>
-          awaitSaveConfirmationIfRequired >>
-          reconnectToTarget
+          ConcurrentEffect[F].racePair(
+            awaitSaveConfirmationIfRequired >> reconnectToTarget,
+            awaitPlayerDisconnection
+          )
       )
     } else {
       // so that this listener ignores one `ServerConnectEvent` for marked players
