@@ -8,9 +8,8 @@ import redis.api.pubsub.{Message, PMessage}
 
 class ManipulateLockActor[
   F[_]: Effect
-](channel: String)
- (implicit localLock: PlayerNameLocalLock[F],
-  effectEnvironment: EffectEnvironment,
+](channel: String, localLock: PlayerNameLocalLock[F])
+ (implicit effectEnvironment: EffectEnvironment,
   configuration: Configuration)
   extends RedisSubscriberActor(
     address = configuration.redis.address,

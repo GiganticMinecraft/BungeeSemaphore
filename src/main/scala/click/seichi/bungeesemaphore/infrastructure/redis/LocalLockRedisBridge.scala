@@ -11,8 +11,8 @@ object LocalLockRedisBridge {
 
   def bindLocalLockToRedis[
     F[_]: Effect
-  ](implicit localLock: PlayerNameLocalLock[F],
-    configuration: Configuration,
+  ](localLock: PlayerNameLocalLock[F])
+   (implicit configuration: Configuration,
     actorSystem: ActorSystem,
     effectEnvironment: EffectEnvironment,
     publishingContext: ContextShift[IO]): F[HasGlobalPlayerSemaphore[F]] = {
@@ -22,7 +22,7 @@ object LocalLockRedisBridge {
 
       // bind the subscriber
       actorSystem.actorOf(
-        Props(new ManipulateLockActor[F](SignalFormat.signalingChannel))
+        Props(new ManipulateLockActor[F](SignalFormat.signalingChannel, localLock))
           .withDispatcher("rediscala.rediscala-client-worker-dispatcher")
       )
 

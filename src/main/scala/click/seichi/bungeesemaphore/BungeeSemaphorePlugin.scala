@@ -30,9 +30,12 @@ class BungeeSemaphorePlugin extends Plugin {
       this.akkaSystem = ConfiguredActorSystemProvider("reference.conf").provide()
       this.akkaSystem
     }
-    implicit val _localLock: PlayerNameLocalLock[IO] = PlayerNameLocalLock.unsafe
+
+    // A lock whose state corresponds to downstream servers saving player data
+    val downstreamSaveLock: PlayerNameLocalLock[IO] = PlayerNameLocalLock.unsafe
+
     implicit val _ioHasGlobalPlayerSemaphore: HasGlobalPlayerSemaphore[IO] = {
-      LocalLockRedisBridge.bindLocalLockToRedis[IO].unsafeRunSync()
+      LocalLockRedisBridge.bindLocalLockToRedis[IO](downstreamSaveLock).unsafeRunSync()
     }
 
     implicit val _proxy: ProxyServer = getProxy
