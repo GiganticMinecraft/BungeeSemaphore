@@ -9,5 +9,10 @@ import simulacrum.typeclass
 @typeclass trait HasGlobalPlayerDataSaveLock[F[_]] {
   def lock(playerName: PlayerName): F[Unit]
 
+  /**
+   * Await for an availability of the lock on given `playerName`.
+   *
+   * This action is cancellable.
+   */
   def awaitLockAvailability(playerName: PlayerName): F[Unit]
 }

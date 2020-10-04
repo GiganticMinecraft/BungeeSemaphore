@@ -66,6 +66,8 @@ class PlayerNameLocalLock[F[_]](private val lockMap: concurrent.Map[PlayerName, 
 
   /**
    * The computation to (semantically) block until the lock on the given [[PlayerName]] is released.
+   *
+   * This action is cancellable.
    */
   def awaitLockAvailability(playerName: PlayerName): F[Unit] = {
     for {
