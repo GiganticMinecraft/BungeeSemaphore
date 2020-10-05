@@ -61,23 +61,23 @@ class SemaphoringServerSwitcher[
     val targetServer = event.getTarget
     val playerName = PlayerName(player.getName)
 
-    val disconnectSourceIfExists = player.getServer match {
-      case null => Sync[F].unit
-      case server =>
-        val overwriteDownstreamBridge =
-          Sync[F].delay {
-            val userConnection = player.asInstanceOf[UserConnection]
-            val serverConnection = userConnection.getServer
-
-            serverConnection.getCh.getHandle.pipeline().get(classOf[HandlerBoss]).setHandler {
-              new ConnectionRetainingDownstreamBridge(proxy, userConnection, serverConnection)
-            }
-          }
-
-        overwriteDownstreamBridge >> lockOnDisconnection(player, server.getInfo)
-    }
-
     if (!playersBeingConnectedToNewServer.contains(playerName)) {
+      val disconnectSourceIfExists = player.getServer match {
+        case null => Sync[F].unit
+        case server =>
+          val overwriteDownstreamBridge =
+            Sync[F].delay {
+              val userConnection = player.asInstanceOf[UserConnection]
+              val serverConnection = userConnection.getServer
+
+              serverConnection.getCh.getHandle.pipeline().get(classOf[HandlerBoss]).setHandler {
+                new ConnectionRetainingDownstreamBridge(proxy, userConnection, serverConnection)
+              }
+            }
+
+          overwriteDownstreamBridge >> lockOnDisconnection(player, server.getInfo)
+      }
+
       val awaitSaveConfirmationIfRequired =
         if (configuration.shouldAwaitForSaveSignal(ServerName(targetServer.getName))) {
           HasGlobalPlayerDataSaveLock[F]
