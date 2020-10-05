@@ -2,7 +2,8 @@ package click.seichi.bungeesemaphore.infrastructure.redis
 
 import cats.effect.Effect
 import click.seichi.bungeesemaphore.application.configuration.Configuration
-import click.seichi.bungeesemaphore.application.{EffectEnvironment, PlayerNameLocalLock}
+import click.seichi.bungeesemaphore.application.EffectEnvironment
+import click.seichi.bungeesemaphore.application.lock.PlayerNameLocalLock
 import redis.actors.RedisSubscriberActor
 import redis.api.pubsub.{Message, PMessage}
 

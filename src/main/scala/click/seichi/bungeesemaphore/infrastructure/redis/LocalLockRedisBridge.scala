@@ -3,7 +3,8 @@ package click.seichi.bungeesemaphore.infrastructure.redis
 import akka.actor.{ActorSystem, Props}
 import cats.effect.{ContextShift, Effect, IO, Sync}
 import click.seichi.bungeesemaphore.application.configuration.Configuration
-import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasGlobalPlayerDataSaveLock, PlayerNameLocalLock}
+import click.seichi.bungeesemaphore.application.lock.PlayerNameLocalLock
+import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasGlobalPlayerDataSaveLock}
 import click.seichi.bungeesemaphore.domain.PlayerName
 
 object LocalLockRedisBridge {

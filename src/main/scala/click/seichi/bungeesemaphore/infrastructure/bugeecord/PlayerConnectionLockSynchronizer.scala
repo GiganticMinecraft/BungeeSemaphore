@@ -1,7 +1,8 @@
 package click.seichi.bungeesemaphore.infrastructure.bugeecord
 
 import cats.effect.Effect
-import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasPlayerConnectionLock, PlayerNameLocalLock}
+import click.seichi.bungeesemaphore.application.lock.PlayerNameLocalLock
+import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasPlayerConnectionLock}
 import click.seichi.bungeesemaphore.domain.PlayerName
 import net.md_5.bungee.api.event.{PlayerDisconnectEvent, PostLoginEvent}
 import net.md_5.bungee.api.plugin.Listener
