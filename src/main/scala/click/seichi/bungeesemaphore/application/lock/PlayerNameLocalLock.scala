@@ -12,7 +12,7 @@ trait PlayerNameLocalLock[F[_]] {
   def lock(playerName: PlayerName): F[Unit]
 
   /**
-   * The computation to unlock the lock on the given [[PlayerName]].
+   * The computation to release the lock, if exists, on the given [[PlayerName]].
    *
    * If there is any computation awaiting for the lock on `playerName`,
    * they complete when `success` is `true`, or fail if `success` is false.
@@ -28,6 +28,8 @@ trait PlayerNameLocalLock[F[_]] {
 
   /**
    * The computation to release a lock, if exists, on the given [[PlayerName]].
+   *
+   * This completes any computation, if exists, of [[awaitLockAvailability]] with the same `playerName`.
    */
   final def unlock(playerName: PlayerName): F[Unit] = {
     unlockWithSuccessFlag(
