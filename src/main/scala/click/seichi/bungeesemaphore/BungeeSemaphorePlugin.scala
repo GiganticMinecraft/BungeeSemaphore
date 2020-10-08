@@ -3,8 +3,9 @@ package click.seichi.bungeesemaphore
 import akka.actor.ActorSystem
 import cats.effect.{ContextShift, IO, SyncIO}
 import click.seichi.bungeesemaphore.application.configuration.Configuration
-import click.seichi.bungeesemaphore.application.lock.{MapPlayerNameLocalLock, PlayerNameLocalLock}
+import click.seichi.bungeesemaphore.application.lock.IndexedLocalConditionVariables
 import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasGlobalPlayerDataSaveLock, HasPlayerConnectionLock}
+import click.seichi.bungeesemaphore.domain.PlayerName
 import click.seichi.bungeesemaphore.infrastructure.JulLoggerEffectEnvironment
 import click.seichi.bungeesemaphore.infrastructure.akka.ConfiguredActorSystemProvider
 import click.seichi.bungeesemaphore.infrastructure.bugeecord.{PlayerConnectionLockSynchronizer, SemaphoringServerSwitcher}
@@ -34,14 +35,14 @@ class BungeeSemaphorePlugin extends Plugin {
 
     implicit val _ioHasGlobalPlayerSemaphore: HasGlobalPlayerDataSaveLock[IO] = {
       // A lock whose state corresponds to downstream servers saving player data
-      val downstreamSaveLock: PlayerNameLocalLock[IO] = MapPlayerNameLocalLock.unsafe
+      val downstreamSaveLock = IndexedLocalConditionVariables.unsafe[IO, PlayerName]
 
       LocalLockRedisBridge.bindLocalLockToRedis[IO](downstreamSaveLock).unsafeRunSync()
     }
 
     val connectionLockSynchronizer = {
       // A lock whose state corresponds to player connection states
-      val connectionLock: PlayerNameLocalLock[IO] = MapPlayerNameLocalLock.unsafe
+      val connectionLock = IndexedLocalConditionVariables.unsafe[IO, PlayerName]
 
       new PlayerConnectionLockSynchronizer[IO](connectionLock)
     }
