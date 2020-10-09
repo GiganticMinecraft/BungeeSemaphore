@@ -1,4 +1,4 @@
-package click.seichi.bungeesemaphore.application.lock
+package click.seichi.generic.concurrent.synchronization.barrier
 
 import cats.effect.Concurrent
 import cats.effect.concurrent.Deferred

@@ -1,4 +1,4 @@
-package click.seichi.bungeesemaphore.application.lock
+package click.seichi.generic.concurrent.synchronization.barrier
 
 /**
  * A reference to a queue of fibers awaiting for a signal to be restarted.

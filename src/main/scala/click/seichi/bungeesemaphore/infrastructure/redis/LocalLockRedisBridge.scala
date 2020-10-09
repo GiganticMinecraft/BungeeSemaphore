@@ -3,9 +3,9 @@ package click.seichi.bungeesemaphore.infrastructure.redis
 import akka.actor.{ActorSystem, Props}
 import cats.effect.{ContextShift, Effect, IO, Sync}
 import click.seichi.bungeesemaphore.application.configuration.Configuration
-import click.seichi.bungeesemaphore.application.lock.IndexedSwitchableBarrier
 import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasGlobalPlayerDataSaveLock}
 import click.seichi.bungeesemaphore.domain.PlayerName
+import click.seichi.generic.concurrent.synchronization.barrier.IndexedSwitchableBarrier
 
 object LocalLockRedisBridge {
   import cats.implicits._

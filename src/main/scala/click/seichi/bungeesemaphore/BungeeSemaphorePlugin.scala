@@ -3,13 +3,13 @@ package click.seichi.bungeesemaphore
 import akka.actor.ActorSystem
 import cats.effect.{ContextShift, IO, SyncIO}
 import click.seichi.bungeesemaphore.application.configuration.Configuration
-import click.seichi.bungeesemaphore.application.lock.IndexedSwitchableBarrier
 import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasGlobalPlayerDataSaveLock, HasPlayerConnectionLock}
 import click.seichi.bungeesemaphore.domain.PlayerName
 import click.seichi.bungeesemaphore.infrastructure.JulLoggerEffectEnvironment
 import click.seichi.bungeesemaphore.infrastructure.akka.ConfiguredActorSystemProvider
 import click.seichi.bungeesemaphore.infrastructure.bugeecord.{PlayerConnectionLockSynchronizer, SemaphoringServerSwitcher}
 import click.seichi.bungeesemaphore.infrastructure.redis.LocalLockRedisBridge
+import click.seichi.generic.concurrent.synchronization.barrier.IndexedSwitchableBarrier
 import net.md_5.bungee.api.ProxyServer
 import net.md_5.bungee.api.plugin.Plugin
 

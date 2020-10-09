@@ -3,8 +3,8 @@ package click.seichi.bungeesemaphore.infrastructure.redis
 import cats.effect.Effect
 import click.seichi.bungeesemaphore.application.EffectEnvironment
 import click.seichi.bungeesemaphore.application.configuration.Configuration
-import click.seichi.bungeesemaphore.application.lock.IndexedSwitchableBarrier
 import click.seichi.bungeesemaphore.domain.PlayerName
+import click.seichi.generic.concurrent.synchronization.barrier.IndexedSwitchableBarrier
 import redis.actors.RedisSubscriberActor
 import redis.api.pubsub.{Message, PMessage}
 
