@@ -3,14 +3,14 @@ package click.seichi.bungeesemaphore.infrastructure.redis
 import cats.effect.Effect
 import click.seichi.bungeesemaphore.application.EffectEnvironment
 import click.seichi.bungeesemaphore.application.configuration.Configuration
-import click.seichi.bungeesemaphore.application.lock.IndexedLocalConditionVariables
+import click.seichi.bungeesemaphore.application.lock.IndexedSwitchableBarrier
 import click.seichi.bungeesemaphore.domain.PlayerName
 import redis.actors.RedisSubscriberActor
 import redis.api.pubsub.{Message, PMessage}
 
 class ManipulateLockActor[
   F[_]: Effect
-](channel: String, localLock: IndexedLocalConditionVariables[F, PlayerName])
+](channel: String, localLock: IndexedSwitchableBarrier[F, PlayerName])
  (implicit effectEnvironment: EffectEnvironment,
   configuration: Configuration)
   extends RedisSubscriberActor(
@@ -26,7 +26,7 @@ class ManipulateLockActor[
 
     val effect = parseMessage(m) match {
       case Some(value) => value match {
-        case DataLockRequest(playerName) => localLock(playerName).beginLock
+        case DataLockRequest(playerName) => localLock(playerName).beginBlock
         case ReleaseDataLock(playerName) => localLock(playerName).unlock
         case DataSaveFailed(playerName) => localLock(playerName).unlockWithFailure
       }

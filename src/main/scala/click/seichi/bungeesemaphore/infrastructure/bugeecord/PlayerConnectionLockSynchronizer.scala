@@ -1,7 +1,7 @@
 package click.seichi.bungeesemaphore.infrastructure.bugeecord
 
 import cats.effect.Effect
-import click.seichi.bungeesemaphore.application.lock.IndexedLocalConditionVariables
+import click.seichi.bungeesemaphore.application.lock.IndexedSwitchableBarrier
 import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasPlayerConnectionLock}
 import click.seichi.bungeesemaphore.domain.PlayerName
 import net.md_5.bungee.api.event.{PlayerDisconnectEvent, PostLoginEvent}
@@ -9,7 +9,7 @@ import net.md_5.bungee.api.plugin.Listener
 
 class PlayerConnectionLockSynchronizer[
   F[_]: Effect
-](localLock: IndexedLocalConditionVariables[F, PlayerName])
+](localLock: IndexedSwitchableBarrier[F, PlayerName])
  (implicit effectEnvironment: EffectEnvironment) extends Listener {
 
   def provideConnectionLock: HasPlayerConnectionLock[F] = {
@@ -19,7 +19,7 @@ class PlayerConnectionLockSynchronizer[
   def onPlayerConnect(event: PostLoginEvent): Unit = {
     effectEnvironment.unsafeRunEffectAsync(
       "Lock connection lock on PostLogin",
-      localLock(PlayerName(event.getPlayer.getName)).beginLock
+      localLock(PlayerName(event.getPlayer.getName)).beginBlock
     )
   }
 

@@ -7,17 +7,17 @@ import scala.collection.concurrent
 import scala.collection.concurrent.TrieMap
 
 /**
- * [[K]]-indexed family of condition variables.
+ * [[K]]-indexed family of switchable barriers.
  */
-class IndexedLocalConditionVariables[F[_], K](private val lockMap: concurrent.Map[K, Deferred[F, Boolean]])
-                                             (implicit private val F: Concurrent[F]) {
+class IndexedSwitchableBarrier[F[_], K](private val lockMap: concurrent.Map[K, Deferred[F, Boolean]])
+                                       (implicit private val F: Concurrent[F]) {
 
   import cats.implicits._
 
-  def apply(key: K): LocalConditionVariable[F] = KeyedLocalConditionVariable(key)
+  def apply(key: K): SwitchableBarrier[F] = KeyedSwitchableBarrier(key)
 
-  private case class KeyedLocalConditionVariable(key: K) extends LocalConditionVariable[F] {
-    override def beginLock: F[Unit] = F.uncancelable {
+  private case class KeyedSwitchableBarrier(key: K) extends SwitchableBarrier[F] {
+    override def beginBlock: F[Unit] = F.uncancelable {
       for {
         promise <- Deferred[F, Boolean]
         _ <- F.delay {
@@ -26,7 +26,7 @@ class IndexedLocalConditionVariables[F[_], K](private val lockMap: concurrent.Ma
       } yield ()
     }
 
-    override def signalEndOfLock(success: Boolean): F[Unit] = F.uncancelable {
+    override def unblock(success: Boolean): F[Unit] = F.uncancelable {
       for {
         promise <- F.delay {
           lockMap.remove(key)
@@ -50,7 +50,7 @@ class IndexedLocalConditionVariables[F[_], K](private val lockMap: concurrent.Ma
         _ <- if (success) {
           F.unit
         } else {
-          F.raiseError(LockReleasedExceptionally)
+          F.raiseError(BarrierUnblockedExceptionally)
         }
       } yield ()
     }
@@ -58,13 +58,13 @@ class IndexedLocalConditionVariables[F[_], K](private val lockMap: concurrent.Ma
 
 }
 
-object IndexedLocalConditionVariables {
+object IndexedSwitchableBarrier {
 
   /**
-   * Unsafely allocate state and get an instance of [[IndexedLocalConditionVariables]].
+   * Unsafely allocate state and get an instance of [[IndexedSwitchableBarrier]].
    */
-  def unsafe[F[_]: Concurrent, K]: IndexedLocalConditionVariables[F, K] = {
-    new IndexedLocalConditionVariables(new TrieMap())
+  def unsafe[F[_]: Concurrent, K]: IndexedSwitchableBarrier[F, K] = {
+    new IndexedSwitchableBarrier(new TrieMap())
   }
 
 }

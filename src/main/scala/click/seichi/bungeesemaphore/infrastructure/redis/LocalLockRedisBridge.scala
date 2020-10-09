@@ -3,7 +3,7 @@ package click.seichi.bungeesemaphore.infrastructure.redis
 import akka.actor.{ActorSystem, Props}
 import cats.effect.{ContextShift, Effect, IO, Sync}
 import click.seichi.bungeesemaphore.application.configuration.Configuration
-import click.seichi.bungeesemaphore.application.lock.IndexedLocalConditionVariables
+import click.seichi.bungeesemaphore.application.lock.IndexedSwitchableBarrier
 import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasGlobalPlayerDataSaveLock}
 import click.seichi.bungeesemaphore.domain.PlayerName
 
@@ -12,7 +12,7 @@ object LocalLockRedisBridge {
 
   def bindLocalLockToRedis[
     F[_]: Effect
-  ](localLock: IndexedLocalConditionVariables[F, PlayerName])
+  ](localLock: IndexedSwitchableBarrier[F, PlayerName])
    (implicit configuration: Configuration,
     actorSystem: ActorSystem,
     effectEnvironment: EffectEnvironment,
@@ -30,7 +30,7 @@ object LocalLockRedisBridge {
       // expose HasGlobalPlayerSemaphore operations to external world
       new HasGlobalPlayerDataSaveLock[F] {
         override def lock(playerName: PlayerName): F[Unit] = {
-          localLock(playerName).beginLock >> Effect[F].liftIO {
+          localLock(playerName).beginBlock >> Effect[F].liftIO {
             IO.fromFuture {
               IO {
                 client.publish(
