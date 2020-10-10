@@ -27,8 +27,8 @@ class ManipulateLockActor[
     val effect = parseMessage(m) match {
       case Some(value) => value match {
         case DataLockRequest(playerName) => localLock(playerName).beginBlock
-        case ReleaseDataLock(playerName) => localLock(playerName).unlock
-        case DataSaveFailed(playerName) => localLock(playerName).unlockWithFailure
+        case ReleaseDataLock(playerName) => localLock(playerName).unblock
+        case DataSaveFailed(playerName) => localLock(playerName).unblockWithFailure
       }
       case None =>
         Effect[F].unit

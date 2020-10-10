@@ -19,6 +19,9 @@ package click.seichi.generic.concurrent.synchronization.barrier
  * This operation is idempotent, meaning that
  * if the operation happens twice without other operations happening,
  * the result is the same as if the operation happened only once.
+ *
+ * @define cancellable
+ * This action is cancellable.
  */
 trait SwitchableBarrier[F[_]] {
 
@@ -33,41 +36,45 @@ trait SwitchableBarrier[F[_]] {
 
   /**
    * The action to
-   *  - atomically switch back to the pass-through phase
-   *  - signal resumption to all fibers that has been executing `await` at the point the phase is switched back
+   *  - atomically switch back to the pass-through phase, clearing the queue of fibers
+   *  - signal resumption to all fibers which were stored at the point the phase is switched back
    *
    * The parameter `success` indicates if the execution of `await` should
    * continue or fail with a [[BarrierUnblockedExceptionally]] exception.
    *
    * $idempotent
    */
-  def unblock(success: Boolean): F[Unit]
+  def unblockWithFlag(success: Boolean): F[Unit]
 
   /**
-   * The computation to (semantically) block until the variable state becomes `false`.
+   * The computation to (semantically) block until the barrier is switched to pass-through phase.
    *
-   * This action fails with [[BarrierUnblockedExceptionally]] if [[unblock]] with `false` has been run.
+   * This action fails with [[BarrierUnblockedExceptionally]] if [[unblockWithFlag]] with `false` has been run.
    *
-   * This action is cancellable.
+   * $cancellable
    */
   def await: F[Unit]
 
   /**
-   * The computation to release a lock, if exists.
+   * The action to
+   *  - atomically switch back to the pass-through phase, clearing the queue of fibers
+   *  - signal resumption to all fibers which were stored at the point the phase is switched back
    *
    * This completes any computation, if exists, of [[await]].
    *
    * $atomic
    */
-  final def unlock: F[Unit] = unblock(success = true)
+  final def unblock: F[Unit] = unblockWithFlag(success = true)
 
   /**
-   * The computation to release a lock, if exists.
+   * The action to
+   *  - atomically switch back to the pass-through phase, clearing the queue of fibers
+   *  - signal resumption to all fibers which were stored at the point the phase is switched back
    *
-   * Unlike [[unlock]], this action will make awaiting [[await]] actions fail with an error.
+   * Unlike [[unblock]], this action will make awaiting [[await]] actions fail with a [[BarrierUnblockedExceptionally]].
    *
    * $atomic
    */
-  final def unlockWithFailure: F[Unit] =unblock(success = false)
+  final def unblockWithFailure: F[Unit] =unblockWithFlag(success = false)
 
 }

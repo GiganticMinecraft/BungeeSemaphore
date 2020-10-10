@@ -26,7 +26,7 @@ class PlayerConnectionLockSynchronizer[
   def onPlayerDisconnect(event: PlayerDisconnectEvent): Unit = {
     effectEnvironment.unsafeRunEffectAsync(
       "Unlock connection lock on disconnect",
-      localLock(PlayerName(event.getPlayer.getName)).unlock
+      localLock(PlayerName(event.getPlayer.getName)).unblock
     )
   }
 

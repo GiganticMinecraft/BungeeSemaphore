@@ -26,7 +26,7 @@ class IndexedSwitchableBarrier[F[_], K](private val lockMap: concurrent.Map[K, D
       } yield ()
     }
 
-    override def unblock(success: Boolean): F[Unit] = F.uncancelable {
+    override def unblockWithFlag(success: Boolean): F[Unit] = F.uncancelable {
       for {
         promise <- F.delay {
           lockMap.remove(key)
