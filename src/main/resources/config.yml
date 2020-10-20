@@ -9,3 +9,9 @@ redis:
   port: 6379
   # uncomment and edit the line below if the redis server has a password
   # password: ""
+
+timeout:
+  # Timeout for locking out players from servers when downstream saves are not confirmed.
+  # Once this duration passes, a locked out player is able to join the target downstream server.
+  # Default is 60 seconds timeout. Specify negative values to disable timeouts.
+  millis: 60000

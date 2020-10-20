@@ -80,13 +80,20 @@ class PluginConfiguration[F[_]: Sync](dataFolder: File) {
         }
       }
 
+      val timeoutDuration = {
+        val timeoutMillis = config.getInt("timeout.millis", 60000)
+        if (timeoutMillis < 0)
+          Duration(timeoutMillis, TimeUnit.MILLISECONDS)
+        else
+          Duration.Inf
+      }
+
       new Configuration {
         override val emitsSaveSignalOnDisconnect: ServerNamePredicate = serverIsSynchronized
         override val shouldAwaitForSaveSignal: ServerNamePredicate = serverIsSynchronized
         override val errorMessages: ErrorMessages = errorMessagesFromConfig
         override val redis: RedisConnectionSettings = redisConnectionSettings
-        // TODO read from file
-        override val joinBlockTimeout: Duration = Duration(20, TimeUnit.SECONDS)
+        override val joinBlockTimeout: Duration = timeoutDuration
       }
     }
   }
