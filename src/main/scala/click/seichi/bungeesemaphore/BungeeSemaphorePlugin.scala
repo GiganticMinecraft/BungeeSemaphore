@@ -1,7 +1,9 @@
 package click.seichi.bungeesemaphore
 
+import java.util.concurrent.Executors
+
 import akka.actor.ActorSystem
-import cats.effect.{ContextShift, IO, SyncIO}
+import cats.effect.{ContextShift, IO, SyncIO, Timer}
 import click.seichi.bungeesemaphore.application.configuration.Configuration
 import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasGlobalPlayerDataSaveLock, HasPlayerConnectionLock}
 import click.seichi.bungeesemaphore.domain.PlayerName
@@ -20,9 +22,10 @@ class BungeeSemaphorePlugin extends Plugin {
   var akkaSystem: ActorSystem = _
 
   override def onEnable(): Unit = {
-    implicit val _executionContext: ExecutionContext = ExecutionContext.global
+    implicit val _executionContext: ExecutionContext = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
     implicit val _contextShift: ContextShift[IO] = IO.contextShift(_executionContext)
     implicit val _effectEnvironment: EffectEnvironment = JulLoggerEffectEnvironment(getLogger)
+    implicit val _timer: Timer[IO] = IO.timer(_executionContext)
 
     implicit val _configuration: Configuration = {
       new PluginConfiguration[SyncIO](getDataFolder).getConfiguration.unsafeRunSync()
