@@ -1,4 +1,4 @@
-package click.seichi.bungeesemaphore.infrastructure.bugeecord
+package click.seichi.bungeesemaphore.infrastructure.bugeecord.listeners
 
 import java.util.concurrent.ConcurrentHashMap
 
@@ -6,8 +6,8 @@ import cats.effect.{ConcurrentEffect, Sync, Timer}
 import click.seichi.bungeesemaphore.application.configuration.Configuration
 import click.seichi.bungeesemaphore.application.{EffectEnvironment, EmitGlobalLock, HasGlobalPlayerDataSaveLock, HasPlayerConnectionLock}
 import click.seichi.bungeesemaphore.domain.{PlayerName, ServerName, Sleeping}
+import click.seichi.bungeesemaphore.infrastructure.bugeecord.actions.{AwaitDataSaveConfirmation, ConnectionModifications}
 import net.md_5.bungee.api.ProxyServer
-import net.md_5.bungee.api.connection.ProxiedPlayer
 import net.md_5.bungee.api.event.{PlayerDisconnectEvent, ServerConnectEvent}
 import net.md_5.bungee.api.plugin.Listener
 import net.md_5.bungee.event.{EventHandler, EventPriority}
@@ -21,11 +21,7 @@ class SemaphoringServerSwitcher[
 
   import cats.implicits._
 
-  private def disconnectServerConnection(player: ProxiedPlayer): F[Unit] = Sync[F].delay {
-    player.getServer.disconnect()
-  }
-
-  @EventHandler(priority = EventPriority.LOWEST)
+   @EventHandler(priority = EventPriority.LOWEST)
   def onPlayerDisconnect(event: PlayerDisconnectEvent): Unit = {
     val player = event.getPlayer
     val playerName = PlayerName(player.getName)
@@ -34,7 +30,7 @@ class SemaphoringServerSwitcher[
     effectEnvironment.unsafeRunEffectAsync(
       "Lock on disconnection",
       EmitGlobalLock.of[F](playerName, serverName) >>
-        disconnectServerConnection(player)
+        ConnectionModifications.disconnectFromServer(player)
     )
   }
 
@@ -59,7 +55,7 @@ class SemaphoringServerSwitcher[
         case originalServer =>
           ConnectionModifications.letConnectionLinger[F](player) >>
             EmitGlobalLock.of[F](playerName, ServerName(originalServer.getInfo.getName)) >>
-            disconnectServerConnection(player)
+            ConnectionModifications.disconnectFromServer(player)
       }
 
       val reconnectToTarget = Sync[F].delay {

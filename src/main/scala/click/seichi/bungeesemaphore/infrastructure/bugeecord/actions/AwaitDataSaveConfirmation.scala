@@ -1,4 +1,4 @@
-package click.seichi.bungeesemaphore.infrastructure.bugeecord
+package click.seichi.bungeesemaphore.infrastructure.bugeecord.actions
 
 import cats.effect.Sync
 import click.seichi.bungeesemaphore.application.HasGlobalPlayerDataSaveLock
@@ -11,8 +11,8 @@ object AwaitDataSaveConfirmation {
 
   import cats.implicits._
 
-  def of[F[_]: Sync: HasGlobalPlayerDataSaveLock](player: ProxiedPlayer, targetServer: ServerInfo)
-                                                 (implicit configuration: Configuration): F[Unit] = {
+  def of[F[_] : Sync : HasGlobalPlayerDataSaveLock](player: ProxiedPlayer, targetServer: ServerInfo)
+                                                   (implicit configuration: Configuration): F[Unit] = {
     if (configuration.shouldAwaitForSaveSignal(ServerName(targetServer.getName))) {
       HasGlobalPlayerDataSaveLock[F]
         .awaitLockAvailability(PlayerName(player.getName))

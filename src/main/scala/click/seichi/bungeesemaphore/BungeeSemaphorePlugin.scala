@@ -9,7 +9,7 @@ import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasGlobalPla
 import click.seichi.bungeesemaphore.domain.PlayerName
 import click.seichi.bungeesemaphore.infrastructure.JulLoggerEffectEnvironment
 import click.seichi.bungeesemaphore.infrastructure.akka.ConfiguredActorSystemProvider
-import click.seichi.bungeesemaphore.infrastructure.bugeecord.{PlayerConnectionLockSynchronizer, SemaphoringServerSwitcher}
+import click.seichi.bungeesemaphore.infrastructure.bugeecord.listeners.{PlayerConnectionLockSynchronizer, SemaphoringServerSwitcher}
 import click.seichi.bungeesemaphore.infrastructure.redis.LocalLockRedisBridge
 import click.seichi.generic.concurrent.synchronization.barrier.IndexedSwitchableBarrier
 import net.md_5.bungee.api.ProxyServer

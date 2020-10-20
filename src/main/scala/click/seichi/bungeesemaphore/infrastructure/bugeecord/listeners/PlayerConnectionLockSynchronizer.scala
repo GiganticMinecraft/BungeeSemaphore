@@ -1,4 +1,4 @@
-package click.seichi.bungeesemaphore.infrastructure.bugeecord
+package click.seichi.bungeesemaphore.infrastructure.bugeecord.listeners
 
 import cats.effect.Effect
 import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasPlayerConnectionLock}
