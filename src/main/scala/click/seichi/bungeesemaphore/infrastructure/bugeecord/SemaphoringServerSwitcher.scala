@@ -106,8 +106,8 @@ class SemaphoringServerSwitcher[
       effectEnvironment.unsafeRunEffectAsync(
         "Execute semaphoric flow on server switching",
         disconnectSourceIfExists >>
-          ConcurrentEffect[F].racePair(
-            ConcurrentEffect[F].racePair(
+          ConcurrentEffect[F].race(
+            ConcurrentEffect[F].race(
               awaitSaveConfirmationIfRequired,
               Sleeping.sleep[F](configuration.joinBlockTimeout)
             ) >> reconnectToTarget,
