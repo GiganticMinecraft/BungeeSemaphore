@@ -4,8 +4,8 @@ import java.util.concurrent.ConcurrentHashMap
 
 import cats.effect.{ConcurrentEffect, Sync, Timer}
 import click.seichi.bungeesemaphore.application.configuration.Configuration
-import click.seichi.bungeesemaphore.application.{EffectEnvironment, EmitGlobalLock, HasGlobalPlayerDataSaveLock, HasPlayerConnectionLock}
-import click.seichi.bungeesemaphore.domain.{PlayerName, ServerName, Sleeping}
+import click.seichi.bungeesemaphore.application._
+import click.seichi.bungeesemaphore.domain.{PlayerName, ServerName}
 import click.seichi.bungeesemaphore.infrastructure.bugeecord.actions.{AwaitDataSaveConfirmation, ConnectionModifications}
 import net.md_5.bungee.api.ProxyServer
 import net.md_5.bungee.api.event.{PlayerDisconnectEvent, ServerConnectEvent}
