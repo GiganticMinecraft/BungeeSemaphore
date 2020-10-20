@@ -16,7 +16,6 @@ import net.md_5.bungee.event.{EventHandler, EventPriority}
 import net.md_5.bungee.netty.HandlerBoss
 
 import scala.collection.mutable
-import scala.concurrent.duration.{Duration, FiniteDuration}
 
 class SemaphoringServerSwitcher[
   F[_]: ConcurrentEffect: HasGlobalPlayerDataSaveLock: HasPlayerConnectionLock: Timer
