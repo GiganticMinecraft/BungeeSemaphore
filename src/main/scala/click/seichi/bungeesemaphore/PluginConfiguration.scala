@@ -2,6 +2,7 @@ package click.seichi.bungeesemaphore
 
 import java.io.File
 import java.nio.file.{Files, Path}
+import java.util.concurrent.TimeUnit
 
 import cats.effect.Sync
 import click.seichi.bungeesemaphore.application.configuration.{Configuration, ErrorMessages, RedisConnectionSettings, ServerNamePredicate}
@@ -9,6 +10,7 @@ import click.seichi.bungeesemaphore.domain.ServerName
 import net.md_5.bungee.api.chat.{BaseComponent, TextComponent}
 import net.md_5.bungee.config.{ConfigurationProvider, YamlConfiguration}
 
+import scala.concurrent.duration.Duration
 import scala.util.matching.Regex
 
 object PluginConfiguration {
@@ -83,6 +85,8 @@ class PluginConfiguration[F[_]: Sync](dataFolder: File) {
         override val shouldAwaitForSaveSignal: ServerNamePredicate = serverIsSynchronized
         override val errorMessages: ErrorMessages = errorMessagesFromConfig
         override val redis: RedisConnectionSettings = redisConnectionSettings
+        // TODO read from file
+        override val joinBlockTimeout: Duration = Duration(20, TimeUnit.SECONDS)
       }
     }
   }

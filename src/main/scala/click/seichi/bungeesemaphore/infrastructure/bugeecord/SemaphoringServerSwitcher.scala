@@ -2,10 +2,10 @@ package click.seichi.bungeesemaphore.infrastructure.bugeecord
 
 import java.util.concurrent.ConcurrentHashMap
 
-import cats.effect.{ConcurrentEffect, Sync}
+import cats.effect.{ConcurrentEffect, Sync, Timer}
 import click.seichi.bungeesemaphore.application.configuration.Configuration
 import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasGlobalPlayerDataSaveLock, HasPlayerConnectionLock}
-import click.seichi.bungeesemaphore.domain.{PlayerName, ServerName}
+import click.seichi.bungeesemaphore.domain.{PlayerName, ServerName, Sleeping}
 import net.md_5.bungee.UserConnection
 import net.md_5.bungee.api.ProxyServer
 import net.md_5.bungee.api.config.ServerInfo
@@ -16,9 +16,10 @@ import net.md_5.bungee.event.{EventHandler, EventPriority}
 import net.md_5.bungee.netty.HandlerBoss
 
 import scala.collection.mutable
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 class SemaphoringServerSwitcher[
-  F[_]: ConcurrentEffect: HasGlobalPlayerDataSaveLock: HasPlayerConnectionLock
+  F[_]: ConcurrentEffect: HasGlobalPlayerDataSaveLock: HasPlayerConnectionLock: Timer
 ](implicit configuration: Configuration, effectEnvironment: EffectEnvironment, proxy: ProxyServer)
   extends Listener {
 
@@ -106,7 +107,10 @@ class SemaphoringServerSwitcher[
         "Execute semaphoric flow on server switching",
         disconnectSourceIfExists >>
           ConcurrentEffect[F].racePair(
-            awaitSaveConfirmationIfRequired >> reconnectToTarget,
+            ConcurrentEffect[F].racePair(
+              awaitSaveConfirmationIfRequired,
+              Sleeping.sleep[F](configuration.joinBlockTimeout)
+            ) >> reconnectToTarget,
             awaitPlayerDisconnection
           )
       )

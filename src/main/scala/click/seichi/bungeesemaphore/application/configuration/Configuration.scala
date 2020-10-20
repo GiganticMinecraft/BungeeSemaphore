@@ -4,6 +4,8 @@ import java.net.InetSocketAddress
 
 import net.md_5.bungee.api.chat.BaseComponent
 
+import scala.concurrent.duration.Duration
+
 trait ErrorMessages {
 
   val downstreamCouldNotSaveData: BaseComponent
@@ -31,5 +33,7 @@ trait Configuration {
   val errorMessages: ErrorMessages
 
   val redis: RedisConnectionSettings
+
+  val joinBlockTimeout: Duration
 
 }
