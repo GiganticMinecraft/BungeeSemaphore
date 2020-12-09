@@ -1,15 +1,14 @@
 package click.seichi.bungeesemaphore
 
-import java.io.File
-import java.nio.file.{Files, Path}
-import java.util.concurrent.TimeUnit
-
 import cats.effect.Sync
 import click.seichi.bungeesemaphore.application.configuration.{Configuration, ErrorMessages, RedisConnectionSettings, ServerNamePredicate}
 import click.seichi.bungeesemaphore.domain.ServerName
 import net.md_5.bungee.api.chat.{BaseComponent, TextComponent}
 import net.md_5.bungee.config.{ConfigurationProvider, YamlConfiguration}
 
+import java.io.File
+import java.nio.file.{Files, Path}
+import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.Duration
 import scala.util.matching.Regex
 
@@ -82,7 +81,7 @@ class PluginConfiguration[F[_]: Sync](dataFolder: File) {
 
       val timeoutDuration = {
         val timeoutMillis = config.getInt("timeout.millis", 60000)
-        if (timeoutMillis < 0)
+        if (timeoutMillis >= 0)
           Duration(timeoutMillis, TimeUnit.MILLISECONDS)
         else
           Duration.Inf
