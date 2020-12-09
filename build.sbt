@@ -84,7 +84,7 @@ addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVers
 lazy val root = (project in file("."))
   .settings(
     name := "BungeeSemaphore",
-    assemblyOutputPath in assembly := baseDirectory.value / "target" / "build" / s"BungeeSemaphore-${version.value}.jar",
+    assemblyOutputPath in assembly := baseDirectory.value / "target" / "build" / "BungeeSemaphore.jar",
     libraryDependencies := providedDependencies ++ testDependencies ++ dependenciesToEmbed,
     unmanagedBase := baseDirectory.value / "localDependencies",
     unmanagedBase := baseDirectory.value / "localDependencies",
