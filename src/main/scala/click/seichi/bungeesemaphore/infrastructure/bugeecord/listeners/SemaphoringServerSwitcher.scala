@@ -48,6 +48,11 @@ class SemaphoringServerSwitcher[
     val targetServer = event.getTarget
     val playerName = PlayerName(player.getName)
 
+    // もし同じサーバーへの移動コマンドが打たれた場合、二度目のonServerConnectイベントが発火しないことにより
+    // 接続がハングする。よって、これは明示的にセマフォ処理を外す必要がある。
+    if (Option(player.getServer).map(_.getInfo.getName).contains(targetServer.getName))
+      return
+
     // もし接続先ターゲットが保存シグナル待機サーバーのリストに入っていなければこのリスナには関係ない
     if (!configuration.shouldAwaitForSaveSignal(ServerName(targetServer.getName)))
       return
