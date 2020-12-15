@@ -1,10 +1,8 @@
 package click.seichi.bungeesemaphore.infrastructure.bugeecord.listeners
 
-import java.util.concurrent.ConcurrentHashMap
-
 import cats.effect.{ConcurrentEffect, Sync, Timer}
-import click.seichi.bungeesemaphore.application.configuration.Configuration
 import click.seichi.bungeesemaphore.application._
+import click.seichi.bungeesemaphore.application.configuration.Configuration
 import click.seichi.bungeesemaphore.domain.{PlayerName, ServerName}
 import click.seichi.bungeesemaphore.infrastructure.bugeecord.actions.{AwaitDataSaveConfirmation, ConnectionModifications}
 import net.md_5.bungee.api.ProxyServer
@@ -12,6 +10,7 @@ import net.md_5.bungee.api.event.{PlayerDisconnectEvent, ServerConnectEvent}
 import net.md_5.bungee.api.plugin.Listener
 import net.md_5.bungee.event.{EventHandler, EventPriority}
 
+import java.util.concurrent.ConcurrentHashMap
 import scala.collection.mutable
 
 class SemaphoringServerSwitcher[
@@ -48,6 +47,10 @@ class SemaphoringServerSwitcher[
     val player = event.getPlayer
     val targetServer = event.getTarget
     val playerName = PlayerName(player.getName)
+
+    // もし接続先ターゲットが保存シグナル待機サーバーのリストに入っていなければこのリスナには関係ない
+    if (!configuration.shouldAwaitForSaveSignal(ServerName(targetServer.getName)))
+      return
 
     if (!playersBeingConnectedToNewServer.contains(playerName)) {
       val disconnectSourceIfExists = player.getServer match {
