@@ -13,6 +13,40 @@ import net.md_5.bungee.event.{EventHandler, EventPriority}
 import java.util.concurrent.ConcurrentHashMap
 import scala.collection.mutable
 
+/**
+ * The following diagram illustrates how this listener reacts to server switches requested by the player.
+ * The horizontal arrows with hyphens (-) represent normal signals, whereas arrows with equals (=)
+ * represent the particular behaviour introduced by this listener.
+ *
+ * The horizontal lines with greater-than symbol (>) are publish signals that Spigot servers are __expected__
+ * to send when they complete persisting (potentially to external data sources such as databases) any data
+ * associated with the player. Lines with less-than symbol (<) are signals subscribed by BungeeCord servers.
+ *
+ * When the Spigot B has a server name `s` that both
+ *  - `configuration.shouldAwaitForSaveSignal(s)`
+ *  - `configuration.emitsSaveSignalOnDisconnect(s)`
+ *  are `true`, the following flow happens:
+ *
+ * {{{
+ *                       [BungeeCord]    [Spigot A] [Spigot B]  [Redis]
+ *  Player p requests for a   |              |          |          |
+ *  switch from Spigot A      |              |          |          |
+ *  to Spigot B               |   Notifies   |          |          |
+ * ------------------------>  |  disconnect  |          |          |
+ *                            |  --------->  |          |          |
+ *                            |          [Saves data]   |          |
+ *                        [holds p's ]   [associated]   |          |
+ *                        [connection]   [  with p  ]   |          |
+ *                            |              |  >>>>>>>>>>>>>>>>>>>>
+ *                            |<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+ *                            |              |          |          |
+ *                            |   Notifies   |          |          |
+ *   Player is notified a     |  connection  |          |          |
+ *   world switch             |  -------------------->  |          |
+ *  <-----------------------  |              |          |          |
+ *                            |              |          |          |
+ * }}}
+ */
 class SemaphoringServerSwitcher[
   F[_]: ConcurrentEffect: HasGlobalPlayerDataSaveLock: HasPlayerConnectionLock: Timer
 ](implicit configuration: Configuration, effectEnvironment: EffectEnvironment, proxy: ProxyServer)
@@ -48,12 +82,13 @@ class SemaphoringServerSwitcher[
     val targetServer = event.getTarget
     val playerName = PlayerName(player.getName)
 
-    // もし同じサーバーへの移動コマンドが打たれた場合、二度目のonServerConnectイベントが発火しないことにより
-    // 接続がハングする。よって、これは明示的にセマフォ処理を外す必要がある。
+    // If we get a server switch command from a player
+    // that tries to go to the same server the player is already connected (e.g. sending `/server lobby` in lobby),
+    // the ServerConnectEvent is not called hence the connection hangs.
+    // We therefore need to explicitly avoid custom server switches in this case.
     if (Option(player.getServer).map(_.getInfo.getName).contains(targetServer.getName))
       return
 
-    // もし接続先ターゲットが保存シグナル待機サーバーのリストに入っていなければこのリスナには関係ない
     if (!configuration.shouldAwaitForSaveSignal(ServerName(targetServer.getName)))
       return
 
