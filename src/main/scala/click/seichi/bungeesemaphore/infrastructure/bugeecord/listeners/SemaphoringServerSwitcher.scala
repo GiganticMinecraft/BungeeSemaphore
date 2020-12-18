@@ -16,7 +16,7 @@ import scala.collection.mutable
 /**
  * The following diagram illustrates how this listener reacts to server switches requested by the player.
  * The horizontal arrows with hyphens (-) represent normal signals, whereas arrows with equals (=)
- * represent the particular behaviour introduced by this listener.
+ * represent signals introduced by this listener.
  *
  * The horizontal lines with greater-than symbol (>) are publish signals that Spigot servers are __expected__
  * to send when they complete persisting (potentially to external data sources such as databases) any data
@@ -32,20 +32,31 @@ import scala.collection.mutable
  *  Player p requests for a   |              |          |          |
  *  switch from Spigot A      |              |          |          |
  *  to Spigot B               |   Notifies   |          |          |
- * ------------------------>  |  disconnect  |          |          |
- *                            |  --------->  |          |          |
+ * -----------[1]---------->  |  disconnect  |          |          |
+ *                            |  ===[2]===>  |          |          |
+ *                            |              |          |          |
+ *                            |         "data being saved"         |
+ *                            |  ==============[3]==============>  |
+ *                            |              |          |          |
  *                            |          [Saves data]   |          |
  *                        [holds p's ]   [associated]   |          |
  *                        [connection]   [  with p  ]   |          |
- *                            |              |  >>>>>>>>>>>>>>>>>>>>
- *                            |<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+ *                            |              |     "data saved"    |
+ *                            |              |  >>>>>>>[4]>>>>>>>  |
+ *                            |       "data has been saved"        |
+ *                            |  <<<<<<<<<<<<<<[5]<<<<<<<<<<<<<<<  |
  *                            |              |          |          |
- *                            |   Notifies   |          |          |
- *   Player is notified a     |  connection  |          |          |
- *   world switch             |  -------------------->  |          |
- *  <-----------------------  |              |          |          |
+ *                            |        Notifies         |          |
+ *   Player is notified a     |       connection        |          |
+ *   world switch             |  ========[6]=========>  |          |
+ *  <---------[7]-----------  |              |          |          |
  *                            |              |          |          |
  * }}}
+ *
+ * The reason why we must take control over [2] and [6] is due to the default behaviour of BungeeCord.
+ * When it receives a server switch request (A -> B), it first sends a login signal to B, and when
+ * that connection is fully established, disconnect the player from A and transfers them to B.
+ * This goes against our intention to "disconnect from A, hold p's connection and then connect to B".
  */
 class SemaphoringServerSwitcher[
   F[_]: ConcurrentEffect: HasGlobalPlayerDataSaveLock: HasPlayerConnectionLock: Timer
