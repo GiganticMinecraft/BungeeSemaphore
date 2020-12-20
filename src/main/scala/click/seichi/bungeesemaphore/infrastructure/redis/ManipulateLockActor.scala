@@ -10,21 +10,23 @@ import redis.api.pubsub.{Message, PMessage}
 
 class ManipulateLockActor[
   F[_]: Effect
-](channel: String, localLock: IndexedSwitchableBarrier[F, PlayerName])
+](localLock: IndexedSwitchableBarrier[F, PlayerName])
  (implicit effectEnvironment: EffectEnvironment,
   configuration: Configuration)
   extends RedisSubscriberActor(
     address = configuration.redis.address,
-    channels = Seq(channel),
-    patterns = Nil,
+    channels = Nil,
+    patterns = Seq(SignalFormat.keyEventChannelPattern),
     authPassword = configuration.redis.password,
     onConnectStatus = _ => ()
   ) {
 
-  override def onMessage(m: Message): Unit = {
+  override def onMessage(m: Message): Unit = {}
+
+  override def onPMessage(pm: PMessage): Unit = {
     import SignalFormat._
 
-    val effect = parseMessage(m) match {
+    val effect = parsePMessage(pm) match {
       case Some(value) => value match {
         case DataLockRequest(playerName) => localLock(playerName).beginBlock
         case ReleaseDataLock(playerName) => localLock(playerName).unblock
@@ -36,6 +38,4 @@ class ManipulateLockActor[
 
     effectEnvironment.unsafeRunEffectAsync("Reacting to incoming redis message", effect)
   }
-
-  override def onPMessage(pm: PMessage): Unit = {}
 }

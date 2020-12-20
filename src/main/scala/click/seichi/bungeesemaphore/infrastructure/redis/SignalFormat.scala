@@ -1,11 +1,14 @@
 package click.seichi.bungeesemaphore.infrastructure.redis
 
 import click.seichi.bungeesemaphore.domain.PlayerName
-import redis.api.pubsub.Message
+import redis.api.pubsub.PMessage
 
 object SignalFormat {
 
   final val signalingChannel = "BungeeSemaphore"
+
+  final val keyEventChannelPattern = "__keyevent@0__:*"
+  final val lockKeyPrefix = "bungee_semaphore_"
 
   object MessagePrefix {
     final val dataLockRequest = "player_data_being_saved"
@@ -14,21 +17,22 @@ object SignalFormat {
   }
 
   sealed trait BungeeSemaphoreMessage
-  case class DataLockRequest(playerName: PlayerName) extends BungeeSemaphoreMessage {
-    override def toString: String = s"${MessagePrefix.dataLockRequest} ${playerName.value}"
-  }
-  case class ReleaseDataLock(playerName: PlayerName) extends BungeeSemaphoreMessage {
-    override def toString: String = s"${MessagePrefix.releaseDataLock} ${playerName.value}"
-  }
-  case class DataSaveFailed(playerName: PlayerName) extends BungeeSemaphoreMessage {
-    override def toString: String = s"${MessagePrefix.dataSaveFailed} ${playerName.value}"
-  }
+  case class DataLockRequest(playerName: PlayerName) extends BungeeSemaphoreMessage
+  case class ReleaseDataLock(playerName: PlayerName) extends BungeeSemaphoreMessage
+  case class DataSaveFailed(playerName: PlayerName) extends BungeeSemaphoreMessage
 
-  def parseMessage(message: Message): Option[BungeeSemaphoreMessage] = {
-    message.data.utf8String.split(' ') match {
-      case Array(MessagePrefix.dataLockRequest, playerName) => Some(DataLockRequest(PlayerName(playerName)))
-      case Array(MessagePrefix.releaseDataLock, playerName) => Some(ReleaseDataLock(PlayerName(playerName)))
-      case Array(MessagePrefix.dataSaveFailed, playerName) => Some(DataSaveFailed(PlayerName(playerName)))
+  def lockKeyOf(playerName: PlayerName): String = s"$lockKeyPrefix${playerName.value}"
+
+  def parsePMessage(message: PMessage): Option[BungeeSemaphoreMessage] = {
+    val splitData = message.data.utf8String.split(' ')
+    if (splitData.length == 0) return None
+
+    val playerName = PlayerName(splitData(0).stripPrefix(lockKeyPrefix))
+
+    message.channel.stripPrefix("__keyevent@0__:") match {
+      case "set" => Some(DataLockRequest(playerName))
+      case "del" => Some(ReleaseDataLock(playerName))
+      case "expired" => Some(DataSaveFailed(playerName))
       case _ => None
     }
   }

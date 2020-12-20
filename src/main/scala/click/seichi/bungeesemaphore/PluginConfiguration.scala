@@ -92,7 +92,7 @@ class PluginConfiguration[F[_]: Sync](dataFolder: File) {
         override val shouldAwaitForSaveSignal: ServerNamePredicate = serverIsSynchronized
         override val errorMessages: ErrorMessages = errorMessagesFromConfig
         override val redis: RedisConnectionSettings = redisConnectionSettings
-        override val joinBlockTimeout: Duration = timeoutDuration
+        override val saveLockTimeout: Duration = timeoutDuration
       }
     }
   }

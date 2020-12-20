@@ -125,10 +125,7 @@ class SemaphoringServerSwitcher[
         "Execute semaphoric flow on server switching",
         disconnectSourceIfExists >>
           ConcurrentEffect[F].race(
-            ConcurrentEffect[F].race(
-              AwaitDataSaveConfirmation.of[F](player, targetServer),
-              Sleeping.sleep[F](configuration.joinBlockTimeout)
-            ) >> reconnectToTarget,
+            AwaitDataSaveConfirmation.of[F](player, targetServer) >> reconnectToTarget,
             HasPlayerConnectionLock[F].awaitDisconnectedState(playerName)
           )
       )

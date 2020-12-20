@@ -1,9 +1,8 @@
 package click.seichi.bungeesemaphore.application.configuration
 
-import java.net.InetSocketAddress
-
 import net.md_5.bungee.api.chat.BaseComponent
 
+import java.net.InetSocketAddress
 import scala.concurrent.duration.Duration
 
 trait ErrorMessages {
@@ -34,6 +33,6 @@ trait Configuration {
 
   val redis: RedisConnectionSettings
 
-  val joinBlockTimeout: Duration
+  val saveLockTimeout: Duration
 
 }
