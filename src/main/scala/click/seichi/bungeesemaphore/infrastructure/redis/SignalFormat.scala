@@ -5,16 +5,8 @@ import redis.api.pubsub.PMessage
 
 object SignalFormat {
 
-  final val signalingChannel = "BungeeSemaphore"
-
   final val keyEventChannelPattern = "__keyevent@0__:*"
   final val lockKeyPrefix = "bungee_semaphore_"
-
-  object MessagePrefix {
-    final val dataLockRequest = "player_data_being_saved"
-    final val releaseDataLock = "confirm_player_data_saved"
-    final val dataSaveFailed = "failed_saving_some_player_data"
-  }
 
   sealed trait BungeeSemaphoreMessage
   case class DataLockRequest(playerName: PlayerName) extends BungeeSemaphoreMessage
