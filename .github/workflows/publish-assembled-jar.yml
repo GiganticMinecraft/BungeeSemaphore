@@ -13,12 +13,15 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Publish Docker Image to GPR
-        uses: machine-learning-apps/gpr-docker-publish@master
-        id: docker
+      - name: Build artifact
+        run: sbt assembly
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
         with:
-          IMAGE_NAME: 'bungeesemaphore-jar'
-          DOCKERFILE_PATH: './docker/assembled-artifact/Dockerfile'
-          BUILD_CONTEXT: './'
+          files: ./target/build/BungeeSemaphore.jar
+          draft: false
+          prerelease: false
+          tag_name: release-at-${{ github.sha }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
