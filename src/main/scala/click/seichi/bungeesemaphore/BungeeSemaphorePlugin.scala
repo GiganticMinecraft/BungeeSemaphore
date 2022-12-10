@@ -1,7 +1,6 @@
 package click.seichi.bungeesemaphore
 
 import java.util.concurrent.Executors
-
 import akka.actor.ActorSystem
 import cats.effect.{ContextShift, IO, SyncIO, Timer}
 import click.seichi.bungeesemaphore.application.configuration.Configuration
@@ -15,6 +14,7 @@ import click.seichi.generic.concurrent.synchronization.barrier.IndexedSwitchable
 import net.md_5.bungee.api.ProxyServer
 import net.md_5.bungee.api.plugin.Plugin
 
+import java.util.logging.Logger
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
 
@@ -56,9 +56,11 @@ class BungeeSemaphorePlugin extends Plugin {
 
     implicit val _proxy: ProxyServer = getProxy
 
+    implicit val logger: Logger = getLogger
+
     val listeners = Vector(
       connectionLockSynchronizer,
-      new SemaphoringServerSwitcher[IO](getLogger)
+      new SemaphoringServerSwitcher[IO]
     )
 
     listeners.foreach { listener =>

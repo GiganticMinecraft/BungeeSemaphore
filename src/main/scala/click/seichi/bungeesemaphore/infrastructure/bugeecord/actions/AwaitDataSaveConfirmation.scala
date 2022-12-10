@@ -13,8 +13,8 @@ object AwaitDataSaveConfirmation {
 
   import cats.implicits._
 
-  def of[F[_] : Sync : HasGlobalPlayerDataSaveLock](player: ProxiedPlayer, targetServer: ServerInfo, logger: Logger)
-                                                   (implicit configuration: Configuration): F[Unit] = {
+  def of[F[_] : Sync : HasGlobalPlayerDataSaveLock](player: ProxiedPlayer, targetServer: ServerInfo)
+                                                   (implicit configuration: Configuration, logger: Logger): F[Unit] = {
     if (configuration.shouldAwaitForSaveSignal(ServerName(targetServer.getName))) {
       HasGlobalPlayerDataSaveLock[F]
         .awaitLockAvailability(PlayerName(player.getName))

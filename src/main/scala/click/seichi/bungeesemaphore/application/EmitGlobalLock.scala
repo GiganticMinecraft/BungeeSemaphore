@@ -8,8 +8,8 @@ import click.seichi.bungeesemaphore.domain.{PlayerName, ServerName}
 import java.util.logging.Logger
 
 object EmitGlobalLock {
-  def of[F[_]: HasGlobalPlayerDataSaveLock: Sync](playerName: PlayerName, disconnectionSource: ServerName, logger: Logger)
-                                                 (implicit configuration: Configuration): F[Unit] = {
+  def of[F[_]: HasGlobalPlayerDataSaveLock: Sync](playerName: PlayerName, disconnectionSource: ServerName)
+                                                 (implicit configuration: Configuration, logger: Logger): F[Unit] = {
     if (configuration.emitsSaveSignalOnDisconnect(disconnectionSource)) {
       HasGlobalPlayerDataSaveLock[F].lock(playerName) >> Sync[F].delay { logger.info(s"$playerName's data being saved'") }
     } else {

@@ -61,7 +61,7 @@ import scala.collection.mutable
  */
 class SemaphoringServerSwitcher[
   F[_]: ConcurrentEffect: HasGlobalPlayerDataSaveLock: HasPlayerConnectionLock: Timer
-](logger: Logger)(implicit configuration: Configuration, effectEnvironment: EffectEnvironment, proxy: ProxyServer)
+](implicit configuration: Configuration, effectEnvironment: EffectEnvironment, proxy: ProxyServer, logger: Logger)
   extends Listener {
 
   import cats.implicits._
@@ -74,7 +74,7 @@ class SemaphoringServerSwitcher[
 
     effectEnvironment.unsafeRunEffectAsync(
       "Lock on disconnection",
-      EmitGlobalLock.of[F](playerName, serverName, logger) >>
+      EmitGlobalLock.of[F](playerName, serverName) >>
         ConnectionModifications.disconnectFromServer(player)
     )
   }
@@ -111,7 +111,7 @@ class SemaphoringServerSwitcher[
         case null => Sync[F].unit
         case originalServer =>
           ConnectionModifications.letConnectionLinger[F](player) >>
-            EmitGlobalLock.of[F](playerName, ServerName(originalServer.getInfo.getName), logger) >>
+            EmitGlobalLock.of[F](playerName, ServerName(originalServer.getInfo.getName)) >>
             ConnectionModifications.disconnectFromServer(player) >> Sync[F].delay { logger.info(s"Notification of $playerName's connection'") }
       }
 
@@ -130,7 +130,7 @@ class SemaphoringServerSwitcher[
         "Execute semaphoric flow on server switching",
         disconnectSourceIfExists >>
           ConcurrentEffect[F].race(
-            AwaitDataSaveConfirmation.of[F](player, targetServer, logger) >> reconnectToTarget,
+            AwaitDataSaveConfirmation.of[F](player, targetServer) >> reconnectToTarget,
             HasPlayerConnectionLock[F].awaitDisconnectedState(playerName)
           ) >> Sync[F].delay { logger.info(s"$playerName is notified a world switch") }
       )
