@@ -112,7 +112,9 @@ class SemaphoringServerSwitcher[
         case originalServer =>
           ConnectionModifications.letConnectionLinger[F](player) >>
             EmitGlobalLock.of[F](playerName, ServerName(originalServer.getInfo.getName)) >>
-            ConnectionModifications.disconnectFromServer(player) >> Sync[F].delay { logger.info(s"Notification of $playerName's connection'") }
+            ConnectionModifications.disconnectFromServer(player) >> Sync[F].delay {
+              logger.info(s"Disconnected $playerName from current server. Holding connection for further actions...")
+            }
       }
 
       val reconnectToTarget = Sync[F].delay {
@@ -121,7 +123,7 @@ class SemaphoringServerSwitcher[
 
         player.connect(targetServer)
 
-        logger.info(s"Notification of $playerName's connection'")
+        logger.info(s"Connected $playerName to the original destination server")
       }
 
       event.setCancelled(true)

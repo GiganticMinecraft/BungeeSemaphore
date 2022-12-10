@@ -11,7 +11,9 @@ object EmitGlobalLock {
   def of[F[_]: HasGlobalPlayerDataSaveLock: Sync](playerName: PlayerName, disconnectionSource: ServerName)
                                                  (implicit configuration: Configuration, logger: Logger): F[Unit] = {
     if (configuration.emitsSaveSignalOnDisconnect(disconnectionSource)) {
-      HasGlobalPlayerDataSaveLock[F].lock(playerName) >> Sync[F].delay { logger.info(s"$playerName's data being saved'") }
+      HasGlobalPlayerDataSaveLock[F].lock(playerName) >> Sync[F].delay {
+        logger.info(s"Globally locked $playerName's data-save lock")
+      }
     } else {
       Sync[F].unit
     }

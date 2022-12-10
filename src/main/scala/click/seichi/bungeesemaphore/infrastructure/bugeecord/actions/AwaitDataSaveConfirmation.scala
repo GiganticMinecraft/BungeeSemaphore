@@ -23,8 +23,8 @@ object AwaitDataSaveConfirmation {
             player.disconnect(configuration.errorMessages.downstreamCouldNotSaveData)
           }
         } >> Sync[F].delay {
-        logger.info(s"${player.getName}'s data has been saved'")
-      }
+          logger.info(s"${player.getName}'s save-lock has been cleared")
+        }
     } else {
       Sync[F].unit
     }
