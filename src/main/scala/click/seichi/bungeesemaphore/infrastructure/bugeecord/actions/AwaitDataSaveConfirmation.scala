@@ -7,11 +7,13 @@ import click.seichi.bungeesemaphore.domain.{PlayerName, ServerName}
 import net.md_5.bungee.api.config.ServerInfo
 import net.md_5.bungee.api.connection.ProxiedPlayer
 
+import java.util.logging.Logger
+
 object AwaitDataSaveConfirmation {
 
   import cats.implicits._
 
-  def of[F[_] : Sync : HasGlobalPlayerDataSaveLock](player: ProxiedPlayer, targetServer: ServerInfo)
+  def of[F[_] : Sync : HasGlobalPlayerDataSaveLock](player: ProxiedPlayer, targetServer: ServerInfo, logger: Logger)
                                                    (implicit configuration: Configuration): F[Unit] = {
     if (configuration.shouldAwaitForSaveSignal(ServerName(targetServer.getName))) {
       HasGlobalPlayerDataSaveLock[F]
@@ -20,7 +22,9 @@ object AwaitDataSaveConfirmation {
           Sync[F].delay {
             player.disconnect(configuration.errorMessages.downstreamCouldNotSaveData)
           }
-        }
+        } >> Sync[F].delay {
+        logger.info(s"${player.getName}'s data has been saved'")
+      }
     } else {
       Sync[F].unit
     }

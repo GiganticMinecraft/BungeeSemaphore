@@ -58,7 +58,7 @@ class BungeeSemaphorePlugin extends Plugin {
 
     val listeners = Vector(
       connectionLockSynchronizer,
-      new SemaphoringServerSwitcher[IO]
+      new SemaphoringServerSwitcher[IO](getLogger)
     )
 
     listeners.foreach { listener =>

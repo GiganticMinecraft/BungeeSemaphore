@@ -1,14 +1,17 @@
 package click.seichi.bungeesemaphore.application
 
 import cats.effect.Sync
+import cats.implicits._
 import click.seichi.bungeesemaphore.application.configuration.Configuration
 import click.seichi.bungeesemaphore.domain.{PlayerName, ServerName}
 
+import java.util.logging.Logger
+
 object EmitGlobalLock {
-  def of[F[_]: HasGlobalPlayerDataSaveLock: Sync](playerName: PlayerName, disconnectionSource: ServerName)
+  def of[F[_]: HasGlobalPlayerDataSaveLock: Sync](playerName: PlayerName, disconnectionSource: ServerName, logger: Logger)
                                                  (implicit configuration: Configuration): F[Unit] = {
     if (configuration.emitsSaveSignalOnDisconnect(disconnectionSource)) {
-      HasGlobalPlayerDataSaveLock[F].lock(playerName)
+      HasGlobalPlayerDataSaveLock[F].lock(playerName) >> Sync[F].delay { logger.info(s"$playerName's data being saved'") }
     } else {
       Sync[F].unit
     }

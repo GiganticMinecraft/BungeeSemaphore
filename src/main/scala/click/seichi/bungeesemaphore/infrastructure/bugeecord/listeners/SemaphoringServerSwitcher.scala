@@ -11,6 +11,7 @@ import net.md_5.bungee.api.plugin.Listener
 import net.md_5.bungee.event.{EventHandler, EventPriority}
 
 import java.util.concurrent.ConcurrentHashMap
+import java.util.logging.Logger
 import scala.collection.mutable
 
 /**
@@ -60,7 +61,7 @@ import scala.collection.mutable
  */
 class SemaphoringServerSwitcher[
   F[_]: ConcurrentEffect: HasGlobalPlayerDataSaveLock: HasPlayerConnectionLock: Timer
-](implicit configuration: Configuration, effectEnvironment: EffectEnvironment, proxy: ProxyServer)
+](logger: Logger)(implicit configuration: Configuration, effectEnvironment: EffectEnvironment, proxy: ProxyServer)
   extends Listener {
 
   import cats.implicits._
@@ -73,7 +74,7 @@ class SemaphoringServerSwitcher[
 
     effectEnvironment.unsafeRunEffectAsync(
       "Lock on disconnection",
-      EmitGlobalLock.of[F](playerName, serverName) >>
+      EmitGlobalLock.of[F](playerName, serverName, logger) >>
         ConnectionModifications.disconnectFromServer(player)
     )
   }
@@ -93,6 +94,8 @@ class SemaphoringServerSwitcher[
     val targetServer = event.getTarget
     val playerName = PlayerName(player.getName)
 
+    logger.info(s"${player.getName} requested a connection to ${targetServer.getName}")
+
     // If we get a server switch command from a player
     // that tries to go to the same server the player is already connected (e.g. sending `/server lobby` in lobby),
     // the ServerConnectEvent is not called hence the connection hangs.
@@ -108,8 +111,8 @@ class SemaphoringServerSwitcher[
         case null => Sync[F].unit
         case originalServer =>
           ConnectionModifications.letConnectionLinger[F](player) >>
-            EmitGlobalLock.of[F](playerName, ServerName(originalServer.getInfo.getName)) >>
-            ConnectionModifications.disconnectFromServer(player)
+            EmitGlobalLock.of[F](playerName, ServerName(originalServer.getInfo.getName), logger) >>
+            ConnectionModifications.disconnectFromServer(player) >> Sync[F].delay { logger.info(s"Notification of $playerName's connection'") }
       }
 
       val reconnectToTarget = Sync[F].delay {
@@ -117,6 +120,8 @@ class SemaphoringServerSwitcher[
         playersBeingConnectedToNewServer.add(playerName)
 
         player.connect(targetServer)
+
+        logger.info(s"Notification of $playerName's connection'")
       }
 
       event.setCancelled(true)
@@ -125,9 +130,9 @@ class SemaphoringServerSwitcher[
         "Execute semaphoric flow on server switching",
         disconnectSourceIfExists >>
           ConcurrentEffect[F].race(
-            AwaitDataSaveConfirmation.of[F](player, targetServer) >> reconnectToTarget,
+            AwaitDataSaveConfirmation.of[F](player, targetServer, logger) >> reconnectToTarget,
             HasPlayerConnectionLock[F].awaitDisconnectedState(playerName)
-          )
+          ) >> Sync[F].delay { logger.info(s"$playerName is notified a world switch") }
       )
     } else {
       // so that this listener ignores one `ServerConnectEvent` for marked players
