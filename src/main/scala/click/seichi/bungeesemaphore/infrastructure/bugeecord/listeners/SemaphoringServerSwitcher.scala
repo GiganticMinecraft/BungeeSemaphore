@@ -132,9 +132,11 @@ class SemaphoringServerSwitcher[
         "Execute semaphoric flow on server switching",
         disconnectSourceIfExists >>
           ConcurrentEffect[F].race(
-            AwaitDataSaveConfirmation.of[F](player, targetServer) >> reconnectToTarget,
+            AwaitDataSaveConfirmation.of[F](player, targetServer) >> reconnectToTarget >> Sync[F].delay {
+              logger.info(s"$playerName is notified a world switch")
+            },
             HasPlayerConnectionLock[F].awaitDisconnectedState(playerName)
-          ) >> Sync[F].delay { logger.info(s"$playerName is notified a world switch") }
+          )
       )
     } else {
       // so that this listener ignores one `ServerConnectEvent` for marked players
