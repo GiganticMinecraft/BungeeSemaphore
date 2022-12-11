@@ -26,6 +26,7 @@ class BungeeSemaphorePlugin extends Plugin {
     implicit val _contextShift: ContextShift[IO] = IO.contextShift(_executionContext)
     implicit val _effectEnvironment: EffectEnvironment = JulLoggerEffectEnvironment(getLogger)
     implicit val _timer: Timer[IO] = IO.timer(_executionContext)
+    implicit val logger: Logger = getLogger
 
     implicit val _configuration: Configuration = {
       new PluginConfiguration[SyncIO](getDataFolder).getConfiguration.unsafeRunSync()
@@ -55,8 +56,6 @@ class BungeeSemaphorePlugin extends Plugin {
     }
 
     implicit val _proxy: ProxyServer = getProxy
-
-    implicit val logger: Logger = getLogger
 
     val listeners = Vector(
       connectionLockSynchronizer,
