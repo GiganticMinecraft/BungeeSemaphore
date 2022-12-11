@@ -12,7 +12,8 @@ import simulacrum.typeclass
   /**
    * Await for an availability of the lock on given `playerName`.
    *
-   * This action is cancellable.
+   * This action is cancellable when next case.
+   *  - When it is found that data save has failed.
    */
   def awaitLockAvailability(playerName: PlayerName): F[Unit]
 }
