@@ -11,6 +11,7 @@ import net.md_5.bungee.api.plugin.Listener
 import net.md_5.bungee.event.{EventHandler, EventPriority}
 
 import java.util.concurrent.ConcurrentHashMap
+import java.util.logging.Logger
 import scala.collection.mutable
 
 /**
@@ -60,7 +61,7 @@ import scala.collection.mutable
  */
 class SemaphoringServerSwitcher[
   F[_]: ConcurrentEffect: HasGlobalPlayerDataSaveLock: HasPlayerConnectionLock: Timer
-](implicit configuration: Configuration, effectEnvironment: EffectEnvironment, proxy: ProxyServer)
+](implicit configuration: Configuration, effectEnvironment: EffectEnvironment, proxy: ProxyServer, logger: Logger)
   extends Listener {
 
   import cats.implicits._
@@ -93,6 +94,8 @@ class SemaphoringServerSwitcher[
     val targetServer = event.getTarget
     val playerName = PlayerName(player.getName)
 
+    logger.info(s"${player.getName} requested a connection to ${targetServer.getName}")
+
     // If we get a server switch command from a player
     // that tries to go to the same server the player is already connected (e.g. sending `/server lobby` in lobby),
     // the ServerConnectEvent is not called hence the connection hangs.
@@ -109,7 +112,9 @@ class SemaphoringServerSwitcher[
         case originalServer =>
           ConnectionModifications.letConnectionLinger[F](player) >>
             EmitGlobalLock.of[F](playerName, ServerName(originalServer.getInfo.getName)) >>
-            ConnectionModifications.disconnectFromServer(player)
+            ConnectionModifications.disconnectFromServer(player) >> Sync[F].delay {
+              logger.info(s"Disconnected $playerName from current server. Holding connection for further actions...")
+            }
       }
 
       val reconnectToTarget = Sync[F].delay {
@@ -117,6 +122,8 @@ class SemaphoringServerSwitcher[
         playersBeingConnectedToNewServer.add(playerName)
 
         player.connect(targetServer)
+
+        logger.info(s"Connected $playerName to the original destination server")
       }
 
       event.setCancelled(true)

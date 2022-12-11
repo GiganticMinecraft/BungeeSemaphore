@@ -11,6 +11,7 @@ import click.seichi.bungeesemaphore.domain.PlayerName
 import click.seichi.generic.concurrent.synchronization.barrier.IndexedSwitchableBarrier
 import redis.RedisClient
 
+import java.util.logging.Logger
 import scala.concurrent.duration.{Duration, FiniteDuration}
 
 object LocalLockRedisBridge {
@@ -44,7 +45,8 @@ object LocalLockRedisBridge {
    (implicit configuration: Configuration,
     actorSystem: ActorSystem,
     effectEnvironment: EffectEnvironment,
-    publishingContext: ContextShift[IO]): F[HasGlobalPlayerDataSaveLock[F]] = {
+    publishingContext: ContextShift[IO],
+    logger: Logger): F[HasGlobalPlayerDataSaveLock[F]] = {
 
     val pxMillis = configuration.saveLockTimeout match {
       case _: Duration.Infinite => None
@@ -90,6 +92,10 @@ object LocalLockRedisBridge {
               localLock(playerName).await,
               requestLocalPromise.get
             )
+
+            _ <- Sync[F].delay {
+              logger.info(s"${playerName.value}'s save-lock has been successfully cleared")
+            }
           } yield ()
         }
       }

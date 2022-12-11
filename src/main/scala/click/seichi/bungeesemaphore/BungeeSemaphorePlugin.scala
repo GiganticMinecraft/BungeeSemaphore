@@ -1,7 +1,6 @@
 package click.seichi.bungeesemaphore
 
 import java.util.concurrent.Executors
-
 import akka.actor.ActorSystem
 import cats.effect.{ContextShift, IO, SyncIO, Timer}
 import click.seichi.bungeesemaphore.application.configuration.Configuration
@@ -15,6 +14,7 @@ import click.seichi.generic.concurrent.synchronization.barrier.IndexedSwitchable
 import net.md_5.bungee.api.ProxyServer
 import net.md_5.bungee.api.plugin.Plugin
 
+import java.util.logging.Logger
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext}
 
@@ -26,6 +26,7 @@ class BungeeSemaphorePlugin extends Plugin {
     implicit val _contextShift: ContextShift[IO] = IO.contextShift(_executionContext)
     implicit val _effectEnvironment: EffectEnvironment = JulLoggerEffectEnvironment(getLogger)
     implicit val _timer: Timer[IO] = IO.timer(_executionContext)
+    implicit val logger: Logger = getLogger
 
     implicit val _configuration: Configuration = {
       new PluginConfiguration[SyncIO](getDataFolder).getConfiguration.unsafeRunSync()
