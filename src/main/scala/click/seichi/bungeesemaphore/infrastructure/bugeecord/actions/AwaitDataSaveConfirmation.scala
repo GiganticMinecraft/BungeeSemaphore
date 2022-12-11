@@ -21,7 +21,7 @@ object AwaitDataSaveConfirmation {
         .orElse {
           Sync[F].delay {
             player.disconnect(configuration.errorMessages.downstreamCouldNotSaveData)
-            logger.info(s"${player.getName}'s save-lock has been cleared. But was not data saved.")
+            logger.info(s"${player.getName}'s save-lock has been cleared, but data was not saved successfully.")
           }
         }
     } else {

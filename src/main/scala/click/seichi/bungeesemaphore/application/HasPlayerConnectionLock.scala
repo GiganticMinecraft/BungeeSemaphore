@@ -11,6 +11,8 @@ import simulacrum.typeclass
    * An action to semantically block until the player with given `playerName` disconnects from the proxy server.
    *
    * This action is cancellable.
+   *
+   * This action is cancelled when the data save has been reported failed.
    */
   def awaitDisconnectedState(playerName: PlayerName): F[Unit]
 }
