@@ -10,3 +10,6 @@
 
 # Local files
 deployLocal.sh
+
+.metals/
+.vscode/

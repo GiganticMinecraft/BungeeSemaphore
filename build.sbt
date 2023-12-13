@@ -79,7 +79,7 @@ excludeFilter in unmanagedResources :=
 
 //endregion
 
-addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.full)
+addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVersion.full)
 
 lazy val root = (project in file("."))
   .settings(
