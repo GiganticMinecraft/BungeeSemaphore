@@ -14,7 +14,7 @@ val providedDependencies = Seq(
   "net.md-5" % "bungeecord-api" % "1.12-SNAPSHOT",
   "net.md-5" % "bungeecord-parent" % "1.12-SNAPSHOT",
   // no runtime
-  "org.typelevel" %% "simulacrum" % "1.0.0"
+  "org.typelevel" %% "simulacrum" % "1.0.1"
 ).map(_ % "provided")
 
 val testDependencies = Seq(
