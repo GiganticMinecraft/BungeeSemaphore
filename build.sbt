@@ -1,6 +1,6 @@
 import ResourceFilter.filterResources
 
-ThisBuild / scalaVersion := "2.13.6"
+ThisBuild / scalaVersion := "2.13.12"
 ThisBuild / version := "0.1.0"
 ThisBuild / description := "A BungeeCord plugin for controlling access to data shared among downstream servers"
 
