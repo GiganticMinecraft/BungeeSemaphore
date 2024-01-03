@@ -13,3 +13,7 @@ deployLocal.sh
 
 .metals/
 .vscode/
+
+.bloop/
+project/.bloop/
+project/metals.sbt
