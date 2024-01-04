@@ -14,7 +14,7 @@ jobs:
           submodules: recursive
 
       - name: Build artifact
-        run: sbt assembly
+        run: mkdir -p target/build && ./sbt assembly
 
       - name: Release
         uses: softprops/action-gh-release@v1
