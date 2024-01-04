@@ -5,7 +5,7 @@ build_image() {
 
   rm -r target/build || true
 
-  ./sbt assembly
+  mkdir -p target/build && ./sbt assembly
 
   cp -n docker/spigot/eula.txt docker/spigot/serverfiles/eula.txt || true
 

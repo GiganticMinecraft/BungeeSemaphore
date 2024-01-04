@@ -1,5 +1,6 @@
 call rd /s /q target\build
 
+mkdir target\build
 call sbt assembly || goto :onerror
 
 REM https://stackoverflow.com/a/23812179
