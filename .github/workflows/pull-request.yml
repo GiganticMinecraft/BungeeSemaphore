@@ -1,0 +1,17 @@
+name: Check sbt assembly on pull request
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+        with:
+          submodules: recursive
+
+      - name: Build artifact
+        run: sbt assembly
