@@ -1,5 +1,3 @@
-version: '3.7'
-
 networks:
   bungee_semaphore_debug:
     external: false
