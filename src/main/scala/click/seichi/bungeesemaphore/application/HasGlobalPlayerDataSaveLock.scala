@@ -1,12 +1,11 @@
 package click.seichi.bungeesemaphore.application
 
 import click.seichi.bungeesemaphore.domain.PlayerName
-import simulacrum.typeclass
 
 /**
  * A typeclass for specifying that there is a cluster-synchronized data-save lock available.
  */
-@typeclass trait HasGlobalPlayerDataSaveLock[F[_]] {
+trait HasGlobalPlayerDataSaveLock[F[_]] {
   def lock(playerName: PlayerName): F[Unit]
 
   /**
@@ -16,4 +15,8 @@ import simulacrum.typeclass
    *  - When it is found that data save has failed.
    */
   def awaitLockAvailability(playerName: PlayerName): F[Unit]
+}
+
+object HasGlobalPlayerDataSaveLock {
+  def apply[F[_]](implicit ev: HasGlobalPlayerDataSaveLock[F]): HasGlobalPlayerDataSaveLock[F] = ev
 }
