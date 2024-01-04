@@ -6,7 +6,7 @@ import simulacrum.typeclass
 /**
  * A typeclass for specifying that there is a machine-local lock synchronized to player's connection
  */
-@typeclass trait HasPlayerConnectionLock[F[_]] {
+trait HasPlayerConnectionLock[F[_]] {
   /**
    * An action to semantically block until the player with given `playerName` disconnects from the proxy server.
    *
@@ -15,4 +15,8 @@ import simulacrum.typeclass
    * This action is cancelled when the data save has been reported failed.
    */
   def awaitDisconnectedState(playerName: PlayerName): F[Unit]
+}
+
+object HasPlayerConnectionLock {
+  def apply[F[_]](implicit ev: HasPlayerConnectionLock[F]): HasPlayerConnectionLock[F] = ev
 }
