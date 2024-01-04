@@ -1,6 +1,6 @@
 import ResourceFilter.filterResources
 
-ThisBuild / scalaVersion := "2.13.6"
+ThisBuild / scalaVersion := "2.13.12"
 ThisBuild / version := "0.1.0"
 ThisBuild / description := "A BungeeCord plugin for controlling access to data shared among downstream servers"
 
@@ -30,8 +30,8 @@ val dependenciesToEmbed = Seq(
 )
 
 // treat localDependencies as "provided" and do not shade them in the output Jar
-assemblyExcludedJars in assembly := {
-  (fullClasspath in assembly).value
+assembly / assemblyExcludedJars := {
+  (assembly / fullClasspath).value
     .filter { a =>
       def directoryContainsFile(directory: File, file: File) =
         file.absolutePath.startsWith(directory.absolutePath)
@@ -40,10 +40,10 @@ assemblyExcludedJars in assembly := {
     }
 }
 
-assemblyMergeStrategy in assembly := {
+assembly / assemblyMergeStrategy := {
   case PathList(x) if x.endsWith(".conf") => MergeStrategy.concat
   case x =>
-    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    val oldStrategy = (assembly / assemblyMergeStrategy).value
     oldStrategy(x)
 }
 
@@ -62,20 +62,20 @@ val filesToBeReplacedInResourceFolder = Seq("plugin.yml")
 
 val filteredResourceGenerator = taskKey[Seq[File]]("Resource generator to filter resources")
 
-filteredResourceGenerator in Compile :=
+Compile / filteredResourceGenerator :=
   filterResources(
     filesToBeReplacedInResourceFolder,
     tokenReplacementMap.value,
-    (resourceManaged in Compile).value, (resourceDirectory in Compile).value
+    (Compile / resourceManaged).value, (Compile / resourceDirectory).value
   )
 
-resourceGenerators in Compile += (filteredResourceGenerator in Compile)
+Compile / resourceGenerators += (Compile / filteredResourceGenerator)
 
-unmanagedResources in Compile += baseDirectory.value / "LICENSE"
+Compile / unmanagedResources += baseDirectory.value / "LICENSE"
 
 // exclude replaced files from copying of unmanagedResources
-excludeFilter in unmanagedResources :=
-  filesToBeReplacedInResourceFolder.foldLeft((excludeFilter in unmanagedResources).value)(_.||(_))
+unmanagedResources / excludeFilter :=
+  filesToBeReplacedInResourceFolder.foldLeft((unmanagedResources / excludeFilter).value)(_.||(_))
 
 //endregion
 
@@ -84,7 +84,7 @@ addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.2" cross CrossVers
 lazy val root = (project in file("."))
   .settings(
     name := "BungeeSemaphore",
-    assemblyOutputPath in assembly := baseDirectory.value / "target" / "build" / "BungeeSemaphore.jar",
+    assembly / assemblyOutputPath := baseDirectory.value / "target" / "build" / "BungeeSemaphore.jar",
     libraryDependencies := providedDependencies ++ testDependencies ++ dependenciesToEmbed,
     unmanagedBase := baseDirectory.value / "localDependencies",
     unmanagedBase := baseDirectory.value / "localDependencies",
