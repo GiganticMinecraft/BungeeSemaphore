@@ -1,7 +1,7 @@
 package click.seichi.bungeesemaphore
 
 import java.util.concurrent.Executors
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import cats.effect.{ContextShift, IO, SyncIO, Timer}
 import click.seichi.bungeesemaphore.application.configuration.Configuration
 import click.seichi.bungeesemaphore.application.{EffectEnvironment, HasGlobalPlayerDataSaveLock, HasPlayerConnectionLock}

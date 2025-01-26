@@ -1,7 +1,7 @@
 package click.seichi.bungeesemaphore.infrastructure.redis
 
-import akka.actor.{ActorSystem, Props}
-import akka.util.ByteString
+import org.apache.pekko.actor.{ActorSystem, Props}
+import org.apache.pekko.util.ByteString
 import cats.Monad
 import cats.effect.concurrent.Deferred
 import cats.effect.{Concurrent, ConcurrentEffect, ContextShift, Effect, IO, Sync}

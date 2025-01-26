@@ -1,6 +1,6 @@
 package click.seichi.bungeesemaphore.infrastructure.redis
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import click.seichi.bungeesemaphore.application.configuration.Configuration
 import redis.RedisClient
 
