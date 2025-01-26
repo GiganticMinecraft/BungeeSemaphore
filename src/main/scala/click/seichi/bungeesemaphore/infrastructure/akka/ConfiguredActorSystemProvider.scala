@@ -1,6 +1,6 @@
 package click.seichi.bungeesemaphore.infrastructure.akka
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 
 case class ConfiguredActorSystemProvider(configurationPath: String) {
   // we need to explicitly pass the classloader because
@@ -8,7 +8,7 @@ case class ConfiguredActorSystemProvider(configurationPath: String) {
   lazy val classLoader: ClassLoader = getClass.getClassLoader
 
   def provide(): ActorSystem = {
-    akka.actor.ActorSystem(
+    org.apache.pekko.actor.ActorSystem(
       name = "default",
       classLoader = Some(classLoader)
     )
