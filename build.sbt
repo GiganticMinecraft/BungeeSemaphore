@@ -8,11 +8,12 @@ ThisBuild / description := "A BungeeCord plugin for controlling access to data s
 
 resolvers ++= Seq(
   "bungeecord-repo" at "https://oss.sonatype.org/content/repositories/snapshots",
+  "minecraft-libraries" at "https://libraries.minecraft.net",
 )
 
 val providedDependencies = Seq(
-  "net.md-5" % "bungeecord-api" % "1.12-SNAPSHOT",
-  "net.md-5" % "bungeecord-parent" % "1.12-SNAPSHOT",
+  "net.md-5" % "bungeecord-api" % "1.20-R0.2",
+  "net.md-5" % "bungeecord-parent" % "1.20-R0.2",
   // no runtime
   "org.typelevel" %% "simulacrum" % "1.0.1"
 ).map(_ % "provided")
