@@ -26,7 +26,7 @@ val testDependencies = Seq(
 
 val dependenciesToEmbed = Seq(
   "org.typelevel" %% "cats-core" % "2.13.0",
-  "org.typelevel" %% "cats-effect" % "2.5.5",
+  "org.typelevel" %% "cats-effect" % "3.7-4972921",
   "io.github.rediscala" %% "rediscala" % "1.17.0",
 )
 
