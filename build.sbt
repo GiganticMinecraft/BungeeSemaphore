@@ -12,7 +12,7 @@ resolvers ++= Seq(
 )
 
 val providedDependencies = Seq(
-  "net.md-5" % "bungeecord-api" % "1.20-R0.2",
+  "net.md-5" % "bungeecord-api" % "1.21-R0.4",
   "net.md-5" % "bungeecord-parent" % "1.20-R0.2",
   // no runtime
   "org.typelevel" %% "simulacrum" % "1.0.1"
