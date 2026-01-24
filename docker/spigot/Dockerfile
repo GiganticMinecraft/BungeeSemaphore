@@ -1,10 +1,10 @@
-FROM openjdk:8-jdk as spigot-builder
+FROM openjdk:25-jdk as spigot-builder
 
 WORKDIR /work
 ADD https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar BuildTools.jar
 RUN java -jar BuildTools.jar -o /artifact --rev 1.12.2
 
-FROM openjdk:8-jdk
+FROM openjdk:25-jdk
 
 COPY --from=spigot-builder /artifact/ /spigot-files/
 COPY docker/spigot/serverfiles/ /spigot-files/
