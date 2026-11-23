@@ -1,6 +1,6 @@
 import ResourceFilter.filterResources
 
-ThisBuild / scalaVersion := "2.13.18"
+ThisBuild / scalaVersion := "3.10.1"
 ThisBuild / version := "0.1.0"
 ThisBuild / description := "A BungeeCord plugin for controlling access to data shared among downstream servers"
 
@@ -13,21 +13,20 @@ resolvers ++= Seq(
 
 val providedDependencies = Seq(
   "net.md-5" % "bungeecord-api" % "1.20-R0.2",
-  "net.md-5" % "bungeecord-parent" % "1.20-R0.2",
-  // no runtime
-  "org.typelevel" %% "simulacrum" % "1.0.1"
+  "net.md-5" % "bungeecord-parent" % "1.20-R0.2"
 ).map(_ % "provided")
 
 val testDependencies = Seq(
   "org.scalamock" %% "scalamock" % "7.6.3",
   "org.scalatest" %% "scalatest" % "3.2.20",
-  "org.scalatestplus" %% "scalacheck-1-14" % "3.2.2.0",
+  "org.scalatestplus" %% "scalacheck-1-20" % "3.2.20.0",
 ).map(_ % "test")
 
-val dependenciesToEmbed = Seq(
+def dependenciesToEmbed(scalaVersion: String) = Seq(
   "org.typelevel" %% "cats-core" % "2.13.0",
   "org.typelevel" %% "cats-effect" % "2.5.5",
   "io.github.rediscala" %% "rediscala" % "1.17.0",
+  "org.scala-lang" %% "scala3-library" % scalaVersion,
 )
 
 // treat localDependencies as "provided" and do not shade them in the output Jar
@@ -100,7 +99,7 @@ lazy val root = (project in file("."))
     assembly / assemblyOutputPath := Def.uncached {
       baseDirectory.value / "target" / "build" / "BungeeSemaphore.jar"
     },
-    libraryDependencies := providedDependencies ++ testDependencies ++ dependenciesToEmbed,
+    libraryDependencies := providedDependencies ++ testDependencies ++ dependenciesToEmbed(scalaVersion.value),
     unmanagedBase := baseDirectory.value / "localDependencies",
     unmanagedBase := baseDirectory.value / "localDependencies",
     scalacOptions ++= Seq(
