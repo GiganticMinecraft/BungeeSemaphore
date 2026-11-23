@@ -13,9 +13,7 @@ resolvers ++= Seq(
 
 val providedDependencies = Seq(
   "net.md-5" % "bungeecord-api" % "1.20-R0.2",
-  "net.md-5" % "bungeecord-parent" % "1.20-R0.2",
-  // no runtime
-  "org.typelevel" %% "simulacrum" % "1.0.1"
+  "net.md-5" % "bungeecord-parent" % "1.20-R0.2"
 ).map(_ % "provided")
 
 val testDependencies = Seq(
@@ -32,12 +30,13 @@ val dependenciesToEmbed = Seq(
 
 // treat localDependencies as "provided" and do not shade them in the output Jar
 assembly / assemblyExcludedJars := {
-  (assembly / fullClasspath).value
-    .filter { a =>
-      def directoryContainsFile(directory: File, file: File) =
-        file.absolutePath.startsWith(directory.absolutePath)
+  val localDependenciesDirectory = baseDirectory.value / "localDependencies"
+  val converter = fileConverter.value
 
-      directoryContainsFile(baseDirectory.value / "localDependencies", a.data)
+  (assembly / fullClasspath).value
+    .filter { dependency =>
+      val file = converter.toPath(dependency.data).toFile
+      file.absolutePath.startsWith(localDependenciesDirectory.absolutePath)
     }
 }
 
@@ -63,16 +62,27 @@ val filesToBeReplacedInResourceFolder = Seq("plugin.yml")
 
 val filteredResourceGenerator = taskKey[Seq[File]]("Resource generator to filter resources")
 
-Compile / filteredResourceGenerator :=
+Compile / filteredResourceGenerator := Def.uncached {
   filterResources(
     filesToBeReplacedInResourceFolder,
     tokenReplacementMap.value,
     (Compile / resourceManaged).value, (Compile / resourceDirectory).value
   )
+}
 
 Compile / resourceGenerators += (Compile / filteredResourceGenerator)
 
 Compile / unmanagedResources += baseDirectory.value / "LICENSE"
+
+Compile / packageBin / mappings := {
+  val originalMappings = (Compile / packageBin / mappings).value
+  val sourcePluginYml = (Compile / resourceDirectory).value / "plugin.yml"
+  val converter = fileConverter.value
+
+  originalMappings.filterNot { case (file, path) =>
+    path == "plugin.yml" && converter.toPath(file).toFile == sourcePluginYml
+  }
+}
 
 // exclude replaced files from copying of unmanagedResources
 unmanagedResources / excludeFilter :=
@@ -85,8 +95,12 @@ addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.13.4" cross CrossVers
 lazy val root = (project in file("."))
   .settings(
     name := "BungeeSemaphore",
-    assembly / assemblyOutputPath := baseDirectory.value / "target" / "build" / "BungeeSemaphore.jar",
-    libraryDependencies := providedDependencies ++ testDependencies ++ dependenciesToEmbed,
+    assembly / assemblyOutputPath := Def.uncached {
+      baseDirectory.value / "target" / "build" / "BungeeSemaphore.jar"
+    },
+    libraryDependencies := providedDependencies ++ testDependencies ++ dependenciesToEmbed ++ Seq(
+      "org.scala-lang" %% "scala3-library" % scalaVersion.value
+    ),
     unmanagedBase := baseDirectory.value / "localDependencies",
     unmanagedBase := baseDirectory.value / "localDependencies",
     scalacOptions ++= Seq(
