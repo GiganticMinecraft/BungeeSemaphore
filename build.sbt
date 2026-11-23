@@ -22,10 +22,11 @@ val testDependencies = Seq(
   "org.scalatestplus" %% "scalacheck-1-20" % "3.2.20.0",
 ).map(_ % "test")
 
-val dependenciesToEmbed = Seq(
+def dependenciesToEmbed(scalaVersion: String) = Seq(
   "org.typelevel" %% "cats-core" % "2.13.0",
   "org.typelevel" %% "cats-effect" % "2.5.5",
   "io.github.rediscala" %% "rediscala" % "1.17.0",
+  "org.scala-lang" %% "scala3-library" % scalaVersion,
 )
 
 // treat localDependencies as "provided" and do not shade them in the output Jar
@@ -98,9 +99,7 @@ lazy val root = (project in file("."))
     assembly / assemblyOutputPath := Def.uncached {
       baseDirectory.value / "target" / "build" / "BungeeSemaphore.jar"
     },
-    libraryDependencies := providedDependencies ++ testDependencies ++ dependenciesToEmbed ++ Seq(
-      "org.scala-lang" %% "scala3-library" % scalaVersion.value
-    ),
+    libraryDependencies := providedDependencies ++ testDependencies ++ dependenciesToEmbed(scalaVersion.value),
     unmanagedBase := baseDirectory.value / "localDependencies",
     unmanagedBase := baseDirectory.value / "localDependencies",
     scalacOptions ++= Seq(
